@@ -203,7 +203,8 @@ ErrorType parseArray(std::string_view* json, EventHandler handler,
 }
 
 ErrorType parseObject(std::string_view* json, EventHandler handler,
-                      JsonPath* parentPath, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+                      JsonPath* parentPath,
+                      std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
 
   json->remove_prefix(1);
@@ -256,7 +257,8 @@ ErrorType parseObject(std::string_view* json, EventHandler handler,
 }
 
 ErrorType parseValue(std::string_view* json, EventHandler handler,
-                     JsonPath* jsonPath, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+                     JsonPath* jsonPath,
+                     std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   skipWhitespaces(json);
 
   if (json->empty()) return ErrorType::EmptyJSONError;
@@ -291,7 +293,8 @@ ErrorType parseValue(std::string_view* json, EventHandler handler,
 
 }  // namespace Detail
 
-ErrorType parseJson(std::string jsonString, EventHandler handler, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+ErrorType parseJson(std::string jsonString, EventHandler handler,
+                    std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
 
   std::size_t pos = 0;
