@@ -18,6 +18,7 @@ add_test(NAME quotesInStrings COMMAND ValidJson_test quotesInStrings)
 add_test(NAME manyBackslashesBeforeQuote COMMAND ValidJson_test manyBackslashesBeforeQuote)
 
 add_executable(MalformedJson_test MalformedJson_test.cpp)
+add_compile_options(-fstack-usage)
 target_link_libraries(MalformedJson_test PRIVATE KaitoTokyo::SimpleJsonReader)
 add_test(NAME emptyInput COMMAND MalformedJson_test emptyInput)
 add_test(NAME unterminatedString COMMAND MalformedJson_test unterminatedString)

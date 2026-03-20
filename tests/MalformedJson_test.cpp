@@ -36,9 +36,7 @@ void assertParseFails(std::string_view testName, std::string jsonString);
 
 // MARK: - Test Cases
 
-void test_emptyString() {
-  assertParseFails("emptyString", "");
-}
+void test_emptyString() { assertParseFails("emptyString", ""); }
 
 void test_unterminatedString() {
   assertParseFails("unterminatedString", R"("unterminated)");
@@ -80,6 +78,13 @@ void test_nestedStartEndChaos() {
   assertParseFails("nestedStartEndChaos", R"([{"a":[{]}])");
 }
 
+void test_tooDeepArrayNesting() {
+  std::string prefix(50000, '[');
+  std::string suffix(50000, ']');
+  std::string jsonString = prefix + suffix;
+  assertParseFails("tooDeepArrayNesting", jsonString);
+}
+
 // MARK: - Test Runner
 
 int main(int argc, char* argv[]) {
@@ -103,6 +108,8 @@ int main(int argc, char* argv[]) {
     test_closeBraceWhereArrayValueShouldBe();
   if (argc == 1 || testName == "nestedStartEndChaos")
     test_nestedStartEndChaos();
+  if (argc == 1 || testName == "tooDeepArrayNesting")
+    test_tooDeepArrayNesting();
 
   return 0;
 }
@@ -123,6 +130,9 @@ void assertParseFails(std::string_view testName, std::string jsonString) {
       SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
   if (err == SimpleJsonReader::ErrorType::OK) {
     throw std::runtime_error("Expected parseJson to fail, but got OK");
+  } else {
+    std::cout << "parseJson failed with error: " << errorTypeToString(err)
+              << std::endl;
   }
 
   printPostamble(testName, "PASSED");

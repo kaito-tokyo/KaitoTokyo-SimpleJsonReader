@@ -102,6 +102,10 @@ std::string errorTypeToString(KaitoTokyo::SimpleJsonReader::ErrorType error) {
       return "InvalidTokenLikelyNullError";
     case ErrorType::InvalidTokenLikelyLiteralError:
       return "InvalidTokenLikelyLiteralError";
+    case ErrorType::DepthLimitExceededInArrayError:
+      return "DepthLimitExceededInArrayError";
+    case ErrorType::DepthLimitExceededInObjectError:
+      return "DepthLimitExceededInObjectError";
     default:
       return "(INVALID)";
   }

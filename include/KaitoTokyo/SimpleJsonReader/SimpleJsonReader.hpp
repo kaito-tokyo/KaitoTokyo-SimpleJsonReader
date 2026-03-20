@@ -43,7 +43,7 @@ enum class EventType : std::uint8_t {
 struct JsonPath {
   JsonPath* parent = nullptr;
   std::variant<std::string_view, std::size_t> component = std::string_view{};
-  std::uint32_t depth = 0;
+  std::int32_t depth = 0;
 };
 
 struct Event {
@@ -68,14 +68,18 @@ enum class ErrorType {
   InvalidTokenLikelyFalseError,
   InvalidTokenLikelyNullError,
   InvalidTokenLikelyLiteralError,
+  DepthLimitExceededInArrayError,
+  DepthLimitExceededInObjectError,
 };
+
+constexpr auto kDefaultMaxDepth = 1000;
 
 namespace Detail {
 
 constexpr auto kSanitizedStructuralDoubleQuote = '\x01';
 
 ErrorType parseValue(std::string_view* json, EventHandler handler,
-                     JsonPath* jsonPath) noexcept;
+                     JsonPath* jsonPath, std::int32_t depthLimit) noexcept;
 
 void skipWhitespaces(std::string_view* json) noexcept {
   using namespace std::string_view_literals;
@@ -154,7 +158,7 @@ ErrorType parseLiteral(std::string_view* json, EventHandler handler,
 }
 
 ErrorType parseArray(std::string_view* json, EventHandler handler,
-                     JsonPath* parentPath) noexcept {
+                     JsonPath* parentPath, std::uint32_t depthLimit) noexcept {
   using namespace std::string_view_literals;
 
   std::size_t index = 0;
@@ -173,8 +177,10 @@ ErrorType parseArray(std::string_view* json, EventHandler handler,
       return ErrorType::OK;
     }
 
+    if (depthLimit <= 0) return ErrorType::DepthLimitExceededInArrayError;
+
     elemPath.component = index;
-    if (ErrorType err = parseValue(json, handler, &elemPath);
+    if (ErrorType err = parseValue(json, handler, &elemPath, depthLimit - 1);
         err != ErrorType::OK)
       return err;
 
@@ -197,7 +203,7 @@ ErrorType parseArray(std::string_view* json, EventHandler handler,
 }
 
 ErrorType parseObject(std::string_view* json, EventHandler handler,
-                      JsonPath* parentPath) {
+                      JsonPath* parentPath, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
 
   json->remove_prefix(1);
@@ -224,7 +230,9 @@ ErrorType parseObject(std::string_view* json, EventHandler handler,
     if (json->front() != ':') return ErrorType::FieldDelimiterMissingError;
     json->remove_prefix(1);
 
-    if (ErrorType err = parseValue(json, handler, &fieldPath);
+    if (depthLimit <= 0) return ErrorType::DepthLimitExceededInObjectError;
+
+    if (ErrorType err = parseValue(json, handler, &fieldPath, depthLimit - 1);
         err != ErrorType::OK)
       return err;
 
@@ -248,16 +256,16 @@ ErrorType parseObject(std::string_view* json, EventHandler handler,
 }
 
 ErrorType parseValue(std::string_view* json, EventHandler handler,
-                     JsonPath* jsonPath) noexcept {
+                     JsonPath* jsonPath, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   skipWhitespaces(json);
 
   if (json->empty()) return ErrorType::EmptyJSONError;
 
   switch (json->front()) {
     case '{':
-      return parseObject(json, handler, jsonPath);
+      return parseObject(json, handler, jsonPath, depthLimit);
     case '[':
-      return parseArray(json, handler, jsonPath);
+      return parseArray(json, handler, jsonPath, depthLimit);
     case kSanitizedStructuralDoubleQuote:
       return parseString(json, handler, jsonPath);
     case 't':
@@ -283,7 +291,7 @@ ErrorType parseValue(std::string_view* json, EventHandler handler,
 
 }  // namespace Detail
 
-ErrorType parseJson(std::string jsonString, EventHandler handler) {
+ErrorType parseJson(std::string jsonString, EventHandler handler, std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
 
   std::size_t pos = 0;
@@ -314,7 +322,7 @@ ErrorType parseJson(std::string jsonString, EventHandler handler) {
 
   std::string_view json(jsonString);
   JsonPath jsonPath{nullptr, ""sv, 0};
-  return Detail::parseValue(&json, handler, &jsonPath);
+  return Detail::parseValue(&json, handler, &jsonPath, depthLimit);
 }
 
 }  // namespace KaitoTokyo::SimpleJsonReader
