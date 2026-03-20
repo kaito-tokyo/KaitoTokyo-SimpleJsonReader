@@ -5,3 +5,4 @@
 add_executable(ValidJson_test ValidJson_test.cpp)
 target_link_libraries(ValidJson_test PRIVATE KaitoTokyo::SimpleJsonReader)
 add_test(NAME emptyObject COMMAND ValidJson_test emptyObject)
+add_test(NAME nestedStringsAndJsonPaths COMMAND ValidJson_test nestedStringsAndJsonPaths)
