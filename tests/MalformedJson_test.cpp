@@ -32,22 +32,52 @@ void printEvent(SimpleJsonReader::Event event);
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
                  SimpleJsonReader::Event receivedEvent);
 void assertEnd(std::deque<ExpectedEvent>& expectedEvents);
+void assertParseFails(std::string_view testName, std::string jsonString);
 
 // MARK: - Test Cases
 
 void test_emptyString() {
-  printPreamble("emptyString");
+  assertParseFails("emptyString", "");
+}
 
-  std::string jsonString = "";
+void test_unterminatedString() {
+  assertParseFails("unterminatedString", R"("unterminated)");
+}
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
-  if (err != SimpleJsonReader::ErrorType::EmptyJSONError) {
-    throw std::runtime_error("Expected EmptyJSONError, but got: " +
-                             errorTypeToString(err));
-  }
+void test_unterminatedObject() {
+  assertParseFails("unterminatedObject", R"({"key": 1)");
+}
 
-  printPostamble("emptyString", "PASSED");
+void test_unterminatedArray() {
+  assertParseFails("unterminatedArray", R"([true, false)");
+}
+
+void test_missingFieldDelimiter() {
+  assertParseFails("missingFieldDelimiter", R"({"key" 1})");
+}
+
+void test_invalidTokenOrdering() {
+  assertParseFails("invalidTokenOrdering", R"([1 false])");
+}
+
+void test_startEndElementsMixedAtRoot() {
+  assertParseFails("startEndElementsMixedAtRoot", R"([}])");
+}
+
+void test_startEndElementsMixedInObject() {
+  assertParseFails("startEndElementsMixedInObject", R"({])");
+}
+
+void test_closeBracketWhereObjectValueShouldBe() {
+  assertParseFails("closeBracketWhereObjectValueShouldBe", R"({"a": ]})");
+}
+
+void test_closeBraceWhereArrayValueShouldBe() {
+  assertParseFails("closeBraceWhereArrayValueShouldBe", R"([1, }])");
+}
+
+void test_nestedStartEndChaos() {
+  assertParseFails("nestedStartEndChaos", R"([{"a":[{]}])");
 }
 
 // MARK: - Test Runner
@@ -56,6 +86,23 @@ int main(int argc, char* argv[]) {
   std::string testName = argc == 1 ? "" : argv[1];
 
   if (argc == 1 || testName == "emptyString") test_emptyString();
+  if (argc == 1 || testName == "unterminatedString") test_unterminatedString();
+  if (argc == 1 || testName == "unterminatedObject") test_unterminatedObject();
+  if (argc == 1 || testName == "unterminatedArray") test_unterminatedArray();
+  if (argc == 1 || testName == "missingFieldDelimiter")
+    test_missingFieldDelimiter();
+  if (argc == 1 || testName == "invalidTokenOrdering")
+    test_invalidTokenOrdering();
+  if (argc == 1 || testName == "startEndElementsMixedAtRoot")
+    test_startEndElementsMixedAtRoot();
+  if (argc == 1 || testName == "startEndElementsMixedInObject")
+    test_startEndElementsMixedInObject();
+  if (argc == 1 || testName == "closeBracketWhereObjectValueShouldBe")
+    test_closeBracketWhereObjectValueShouldBe();
+  if (argc == 1 || testName == "closeBraceWhereArrayValueShouldBe")
+    test_closeBraceWhereArrayValueShouldBe();
+  if (argc == 1 || testName == "nestedStartEndChaos")
+    test_nestedStartEndChaos();
 
   return 0;
 }
@@ -67,4 +114,16 @@ void printPreamble(std::string_view testName) {
 void printPostamble(std::string_view testName, std::string_view status) {
   std::cout << "=== Finished test: " << testName << " (" << status
             << ") ===" << std::endl;
+}
+
+void assertParseFails(std::string_view testName, std::string jsonString) {
+  printPreamble(testName);
+
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
+  if (err == SimpleJsonReader::ErrorType::OK) {
+    throw std::runtime_error("Expected parseJson to fail, but got OK");
+  }
+
+  printPostamble(testName, "PASSED");
 }
