@@ -293,6 +293,22 @@ ErrorType parseValue(std::string_view* json, EventHandler handler,
 
 }  // namespace Detail
 
+/**
+ * @brief Parses a JSON string and emits events to the provided handler.
+ * @param jsonString The JSON string to parse. Move semantics are supported for efficiency.
+ * @param handler A synchronous callback function to receive parsing events.
+ * @param depthLimit A hidden parameter to specify the maximum depth.
+ * @return OK if parsing succeeded, otherwise an error code.
+ * @code
+ * parseJson(std::move(view), [](auto event) {
+ *   // Write your code to handle JSON content here.
+ *   // event          - The context of the parsing event. Only valid during this callback execution.
+ *   // event.type     - The type of parsing event like StartArrayo or String.
+ *   // event.frament  - The raw JSON fragment corresponding to the event.
+ *   // envet.jsonPath - The JSON path of the current event. Matcher helpers are available in the other header file.
+ * });
+ * @endcode
+ */
 ErrorType parseJson(std::string jsonString, EventHandler handler,
                     std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;

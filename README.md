@@ -23,7 +23,8 @@ Recursive Descent JSON parser for C++ with SAX-like interface. Written by Kaito 
 ## Example of code
 
 ```cpp
-#include <KaitoTokyo/SimpleJsonReader.hpp>
+#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
+#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp>
 
 using namespace KaitoTokyo::SimpleJsonReader;
 
