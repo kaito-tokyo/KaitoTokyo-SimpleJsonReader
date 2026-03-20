@@ -47,7 +47,7 @@ struct JsonPath {
 };
 
 struct Event {
-  std::string_view value;
+  std::string_view fragment;
   JsonPath* jsonPath;
   EventType type;
 };
