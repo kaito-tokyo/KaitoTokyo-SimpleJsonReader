@@ -15,6 +15,7 @@ add_test(NAME rootFalse COMMAND ValidJson_test rootFalse)
 add_test(NAME rootNull COMMAND ValidJson_test rootNull)
 add_test(NAME whitespaceAroundTokens COMMAND ValidJson_test whitespaceAroundTokens)
 add_test(NAME quotesInStrings COMMAND ValidJson_test quotesInStrings)
+add_test(NAME manyBackslashesBeforeQuote COMMAND ValidJson_test manyBackslashesBeforeQuote)
 
 add_executable(MalformedJson_test MalformedJson_test.cpp)
 target_link_libraries(MalformedJson_test PRIVATE KaitoTokyo::SimpleJsonReader)

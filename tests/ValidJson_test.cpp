@@ -375,6 +375,37 @@ void test_quotesInStrings() {
   printPostamble("quotesInStrings", "PASSED");
 }
 
+void test_manyBackslashesBeforeQuote() {
+  printPreamble("manyBackslashesBeforeQuote");
+
+  std::string jsonString = R"(["trail\"","trail\\","trail\\\"","trail\\\\","trail\\\\\"","trail\\\\\\","trail\\\\\\\"","trail\\\\\\\\","trail\\\\\\\\\"","trail\\\\\\\\\\"])";
+
+  std::deque<ExpectedEvent> expectedEvents{
+      {StartArray, ".", "["},
+      {String, "[0]", R"(trail\")"},
+      {String, "[1]", R"(trail\\)"},
+      {String, "[2]", R"(trail\\\")"},
+      {String, "[3]", R"(trail\\\\)"},
+      {String, "[4]", R"(trail\\\\\")"},
+      {String, "[5]", R"(trail\\\\\\)"},
+      {String, "[6]", R"(trail\\\\\\\")"},
+      {String, "[7]", R"(trail\\\\\\\\)"},
+      {String, "[8]", R"(trail\\\\\\\\\")"},
+      {String, "[9]", R"(trail\\\\\\\\\\)"},
+      {EndArray, ".", "]"},
+  };
+
+  auto handler = [&expectedEvents](auto event) {
+    printEvent(event);
+    assertEvent(expectedEvents, event);
+  };
+
+  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  assertEnd(err, expectedEvents);
+
+  printPostamble("manyBackslashesBeforeQuote", "PASSED");
+}
+
 // MARK: - Test Runner
 
 int main(int argc, char* argv[]) {
@@ -392,6 +423,8 @@ int main(int argc, char* argv[]) {
   if (argc == 1 || testName == "rootNull") test_rootNull();
   if (argc == 1 || testName == "whitespaceAroundTokens") test_whitespaceAroundTokens();
   if (argc == 1 || testName == "quotesInStrings") test_quotesInStrings();
+  if (argc == 1 || testName == "manyBackslashesBeforeQuote")
+    test_manyBackslashesBeforeQuote();
 
   return 0;
 }
