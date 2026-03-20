@@ -34,7 +34,8 @@ void printPostamble(std::string_view testName, std::string_view status);
 void printEvent(SimpleJsonReader::Event event);
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
                  SimpleJsonReader::Event receivedEvent);
-void assertEnd(SimpleJsonReader::ErrorType err, std::deque<ExpectedEvent>& expectedEvents);
+void assertEnd(SimpleJsonReader::ErrorType err,
+               std::deque<ExpectedEvent>& expectedEvents);
 
 // MARK: - Test Cases
 
@@ -54,7 +55,8 @@ void test_emptyObject() {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("emptyObject", "PASSED");
 }
@@ -102,7 +104,8 @@ void test_nestedStringsAndJsonPaths() {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("nestedStringsAndJsonPaths", "PASSED");
 }
@@ -158,7 +161,8 @@ void test_variousLanguages() {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("variousLanguages", "PASSED");
 }
@@ -179,7 +183,8 @@ void test_rootArray() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootArray", "PASSED");
@@ -199,7 +204,8 @@ void test_rootString() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootString", "PASSED");
@@ -219,7 +225,8 @@ void test_rootNumber() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootNumber", "PASSED");
@@ -239,7 +246,8 @@ void test_rootTrue() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootTrue", "PASSED");
@@ -259,7 +267,8 @@ void test_rootFalse() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootFalse", "PASSED");
@@ -279,7 +288,8 @@ void test_rootNull() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootNull", "PASSED");
@@ -323,7 +333,8 @@ void test_whitespaceAroundTokens() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("whitespaceAroundTokens", "PASSED");
@@ -369,7 +380,8 @@ void test_quotesInStrings() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("quotesInStrings", "PASSED");
@@ -378,7 +390,8 @@ void test_quotesInStrings() {
 void test_manyBackslashesBeforeQuote() {
   printPreamble("manyBackslashesBeforeQuote");
 
-  std::string jsonString = R"(["trail\"","trail\\","trail\\\"","trail\\\\","trail\\\\\"","trail\\\\\\","trail\\\\\\\"","trail\\\\\\\\","trail\\\\\\\\\"","trail\\\\\\\\\\"])";
+  std::string jsonString =
+      R"(["trail\"","trail\\","trail\\\"","trail\\\\","trail\\\\\"","trail\\\\\\","trail\\\\\\\"","trail\\\\\\\\","trail\\\\\\\\\"","trail\\\\\\\\\\"])";
 
   std::deque<ExpectedEvent> expectedEvents{
       {StartArray, ".", "["},
@@ -400,7 +413,8 @@ void test_manyBackslashesBeforeQuote() {
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("manyBackslashesBeforeQuote", "PASSED");
@@ -421,7 +435,8 @@ int main(int argc, char* argv[]) {
   if (argc == 1 || testName == "rootTrue") test_rootTrue();
   if (argc == 1 || testName == "rootFalse") test_rootFalse();
   if (argc == 1 || testName == "rootNull") test_rootNull();
-  if (argc == 1 || testName == "whitespaceAroundTokens") test_whitespaceAroundTokens();
+  if (argc == 1 || testName == "whitespaceAroundTokens")
+    test_whitespaceAroundTokens();
   if (argc == 1 || testName == "quotesInStrings") test_quotesInStrings();
   if (argc == 1 || testName == "manyBackslashesBeforeQuote")
     test_manyBackslashesBeforeQuote();
@@ -434,7 +449,8 @@ void printPreamble(std::string_view testName) {
 }
 
 void printPostamble(std::string_view testName, std::string_view status) {
-  std::cout << "=== Finished test: " << testName << " (" << status << ") ===" << std::endl;
+  std::cout << "=== Finished test: " << testName << " (" << status
+            << ") ===" << std::endl;
 }
 
 void printEvent(SimpleJsonReader::Event event) {
@@ -448,8 +464,10 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
   ExpectedEvent expectedEvent = expectedEvents.front();
 
   if (receivedEvent.type != expectedEvent.type) {
-    std::cout << "Expected event type: " << eventTypeToString(expectedEvent.type)
-              << ", but got: " << eventTypeToString(receivedEvent.type) << std::endl;
+    std::cout << "Expected event type: "
+              << eventTypeToString(expectedEvent.type)
+              << ", but got: " << eventTypeToString(receivedEvent.type)
+              << std::endl;
     throw std::runtime_error("Event type mismatch");
   }
 
@@ -466,7 +484,8 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
   expectedEvents.pop_front();
 }
 
-void assertEnd(SimpleJsonReader::ErrorType error, std::deque<ExpectedEvent>& expectedEvents) {
+void assertEnd(SimpleJsonReader::ErrorType error,
+               std::deque<ExpectedEvent>& expectedEvents) {
   if (error != SimpleJsonReader::ErrorType::OK) {
     throw std::runtime_error("Parsing error: " + errorTypeToString(error));
   }

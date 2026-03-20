@@ -40,9 +40,11 @@ void test_emptyString() {
 
   std::string jsonString = "";
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
+  SimpleJsonReader::ErrorType err =
+      SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
   if (err != SimpleJsonReader::ErrorType::EmptyJSONError) {
-    throw std::runtime_error("Expected EmptyJSONError, but got: " + errorTypeToString(err));
+    throw std::runtime_error("Expected EmptyJSONError, but got: " +
+                             errorTypeToString(err));
   }
 
   printPostamble("emptyString", "PASSED");
@@ -63,5 +65,6 @@ void printPreamble(std::string_view testName) {
 }
 
 void printPostamble(std::string_view testName, std::string_view status) {
-  std::cout << "=== Finished test: " << testName << " (" << status << ") ===" << std::endl;
+  std::cout << "=== Finished test: " << testName << " (" << status
+            << ") ===" << std::endl;
 }
