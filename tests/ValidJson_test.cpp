@@ -285,6 +285,96 @@ void test_rootNull() {
   printPostamble("rootNull", "PASSED");
 }
 
+void test_whitespaceAroundTokens() {
+  printPreamble("whitespaceAroundTokens");
+
+  std::string jsonString =
+      " \n\t { \r\n"
+      "  \t\"outer\"  :  [  \n"
+      "    {  \"inner\"  :  1  }  ,  \n"
+      "    null  \n"
+      "  ]  ,  \n"
+      "  \"flag\"  :  true  ,  \n"
+      "  \"text\"  :  \"ok\"  \n"
+      "} \n \t ";
+
+  // clang-format off
+  std::deque<ExpectedEvent> expectedEvents{
+      {StartObject, ".",              "{"},
+      {Key,         ".outer",         "outer"},
+      {StartArray,  ".outer",         "["},
+      {StartObject, ".outer[0]",      "{"},
+      {Key,         ".outer[0].inner", "inner"},
+      {Number,      ".outer[0].inner", "1"},
+      {EndObject,   ".outer[0]",       "}"},
+      {Null,        ".outer[1]",       "null"},
+      {EndArray,    ".outer",          "]"},
+      {Key,         ".flag",           "flag"},
+      {True,        ".flag",           "true"},
+      {Key,         ".text",           "text"},
+      {String,      ".text",           "ok"},
+      {EndObject,   ".",               "}"},
+
+  };
+  // clang-format on
+
+  auto handler = [&expectedEvents](auto event) {
+    printEvent(event);
+    assertEvent(expectedEvents, event);
+  };
+
+  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  assertEnd(err, expectedEvents);
+
+  printPostamble("whitespaceAroundTokens", "PASSED");
+}
+
+void test_quotesInStrings() {
+  printPreamble("quotesInStrings");
+
+  std::string jsonString = R"({
+  "single": "\"",
+  "\"quoted\"": "title",
+  "sentence": "She said \"hello\" and left",
+  "array": ["a\"b", "\"start", "end\""],
+  "nested": { "inner": "x \" y \" z" }
+})";
+
+  // clang-format off
+  std::deque<ExpectedEvent> expectedEvents{
+      {StartObject, R"(.)",             R"({)"},
+      {Key,         R"(.single)",       R"(single)"},
+      {String,      R"(.single)",       R"(\")"},
+      {Key,         R"(.\"quoted\")", R"(\"quoted\")"},
+      {String,      R"(.\"quoted\")", R"(title)"},
+      {Key,         R"(.sentence)",     R"(sentence)"},
+      {String,      R"(.sentence)",     R"(She said \"hello\" and left)"},
+      {Key,         R"(.array)",        R"(array)"},
+      {StartArray,  R"(.array)",        R"([)"},
+      {String,      R"(.array[0])",     R"(a\"b)"},
+      {String,      R"(.array[1])",     R"(\"start)"},
+      {String,      R"(.array[2])",     R"(end\")"},
+      {EndArray,    R"(.array)",        R"(])"},
+      {Key,         R"(.nested)",       R"(nested)"},
+      {StartObject, R"(.nested)",       R"({)"},
+      {Key,         R"(.nested.inner)", R"(inner)"},
+      {String,      R"(.nested.inner)", R"(x \" y \" z)"},
+      {EndObject,   R"(.nested)",       R"(})"},
+      {EndObject,   R"(.)",             R"(})"},
+  };
+  // clang-format on
+
+  auto handler = [&expectedEvents](auto event) {
+    printEvent(event);
+    assertEvent(expectedEvents, event);
+  };
+
+  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  assertEnd(err, expectedEvents);
+
+  printPostamble("quotesInStrings", "PASSED");
+}
+
 // MARK: - Test Runner
 
 int main(int argc, char* argv[]) {
@@ -300,6 +390,8 @@ int main(int argc, char* argv[]) {
   if (argc == 1 || testName == "rootTrue") test_rootTrue();
   if (argc == 1 || testName == "rootFalse") test_rootFalse();
   if (argc == 1 || testName == "rootNull") test_rootNull();
+  if (argc == 1 || testName == "whitespaceAroundTokens") test_whitespaceAroundTokens();
+  if (argc == 1 || testName == "quotesInStrings") test_quotesInStrings();
 
   return 0;
 }
@@ -323,10 +415,14 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
   ExpectedEvent expectedEvent = expectedEvents.front();
 
   if (receivedEvent.type != expectedEvent.type) {
+    std::cout << "Expected event type: " << eventTypeToString(expectedEvent.type)
+              << ", but got: " << eventTypeToString(receivedEvent.type) << std::endl;
     throw std::runtime_error("Event type mismatch");
   }
 
   if (receivedEvent.value != expectedEvent.value) {
+    std::cout << "Expected event value: " << expectedEvent.value
+              << ", but got: " << receivedEvent.value << std::endl;
     throw std::runtime_error("Event value mismatch");
   }
 
