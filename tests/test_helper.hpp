@@ -71,3 +71,38 @@ std::string jsonPathToString(KaitoTokyo::SimpleJsonReader::JsonPath* jsonPath) {
     return result;
   }
 }
+
+std::string errorTypeToString(KaitoTokyo::SimpleJsonReader::ErrorType error) {
+  using KaitoTokyo::SimpleJsonReader::ErrorType;
+
+  switch (error) {
+    case ErrorType::OK:
+      return "OK";
+    case ErrorType::EmptyJSONError:
+      return "EmptyJSONError";
+    case ErrorType::UnexpectedEndWhileParsingObjectError:
+      return "UnexpectedEndWhileParsingObjectError";
+    case ErrorType::UnexpectedEndWhileParsingArrayError:
+      return "UnexpectedEndWhileParsingArrayError";
+    case ErrorType::UnexpectedEndWhileParsingStringError:
+      return "UnexpectedEndWhileParsingStringError";
+    case ErrorType::FieldDelimiterMissingError:
+      return "FieldDelimiterMissingError";
+    case ErrorType::InvalidTokenWhileParsingValueError:
+      return "InvalidTokenWhileParsingValueError";
+    case ErrorType::InvalidTokenWhileParsingObjectError:
+      return "InvalidTokenWhileParsingObjectError";
+    case ErrorType::InvalidTokenWhileParsingArrayError:
+      return "InvalidTokenWhileParsingArrayError";
+    case ErrorType::InvalidTokenLikelyTrueError:
+      return "InvalidTokenLikelyTrueError";
+    case ErrorType::InvalidTokenLikelyFalseError:
+      return "InvalidTokenLikelyFalseError";
+    case ErrorType::InvalidTokenLikelyNullError:
+      return "InvalidTokenLikelyNullError";
+    case ErrorType::InvalidTokenLikelyLiteralError:
+      return "InvalidTokenLikelyLiteralError";
+    default:
+      return "(INVALID)";
+  }
+}

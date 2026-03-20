@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+
+[*.{cpp,hpp,c,h}]
+indent_style = space
+indent_size = 2
