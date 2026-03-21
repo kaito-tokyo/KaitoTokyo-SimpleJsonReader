@@ -52,10 +52,9 @@ inline bool isFalse(const Event &event) {
 
 inline bool isNull(const Event &event) { return event.type == EventType::Null; }
 
-
-inline bool matchesPathPrefix(const Event &event,
+inline bool matchesPathPrefix(const Event             &event,
                               const JsonPathComponent *prefix,
-                              std::int32_t prefixLength) {
+                              std::int32_t             prefixLength) {
   if (event.jsonPath == nullptr) {
     throw std::invalid_argument("Event's jsonPath cannot be null");
   } else if (prefixLength == 0) {
@@ -84,7 +83,7 @@ inline bool matchesPathPrefix(const Event &event,
   return current != nullptr && current->parent == nullptr;
 }
 
-inline bool matchesPathPrefix(const Event &event,
+inline bool matchesPathPrefix(const Event                             &event,
                               std::initializer_list<JsonPathComponent> prefix) {
   return matchesPathPrefix(event, prefix.begin(),
                            static_cast<std::int32_t>(prefix.size()));
@@ -107,7 +106,7 @@ inline bool matchesExactPath(const Event &event, const JsonPathComponent *path,
   }
 }
 
-inline bool matchesExactPath(const Event &event,
+inline bool matchesExactPath(const Event                             &event,
                              std::initializer_list<JsonPathComponent> path) {
   return matchesExactPath(event, path.begin(),
                           static_cast<std::int32_t>(path.size()));

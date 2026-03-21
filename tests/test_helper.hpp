@@ -2,13 +2,12 @@
 //
 // SPDX-License-Identifier: CC0-1.0
 
+#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <cstdint>
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
-
-#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 
 std::string eventTypeToString(KaitoTokyo::SimpleJsonReader::EventType type) {
   using KaitoTokyo::SimpleJsonReader::EventType;
