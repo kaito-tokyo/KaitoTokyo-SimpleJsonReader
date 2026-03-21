@@ -16,44 +16,98 @@
 
 namespace KaitoTokyo::SimpleJsonReader {
 
-bool isStartObject(EventType type) {
-  return type == EventType::StartObject;
+inline bool isStartObject(const Event &event) {
+  return event.type == EventType::StartObject;
 }
 
-bool isEndObject(EventType type) {
-  return type == EventType::EndObject;
+inline bool isEndObject(const Event &event) {
+  return event.type == EventType::EndObject;
 }
 
-bool isStartArray(EventType type) {
-  return type == EventType::StartArray;
+inline bool isStartArray(const Event &event) {
+  return event.type == EventType::StartArray;
 }
 
-bool isEndArray(EventType type) {
-  return type == EventType::EndArray;
+inline bool isEndArray(const Event &event) {
+  return event.type == EventType::EndArray;
 }
 
-bool isKey(EventType type) {
-  return type == EventType::Key;
+inline bool isKey(const Event &event) { return event.type == EventType::Key; }
+
+inline bool isString(const Event &event) {
+  return event.type == EventType::String;
 }
 
-bool isString(EventType type) {
-  return type == EventType::String;
+inline bool isNumber(const Event &event) {
+  return event.type == EventType::Number;
 }
 
-bool isNumber(EventType type) {
-  return type == EventType::Number;
+inline bool isTrue(const Event &event) { return event.type == EventType::True; }
+
+inline bool isFalse(const Event &event) {
+  return event.type == EventType::False;
 }
 
-bool isTrue(EventType type) {
-  return type == EventType::True;
+inline bool isNull(const Event &event) { return event.type == EventType::Null; }
+
+
+inline bool matchesPathPrefix(const Event &event,
+                              const JsonPathComponent *prefix,
+                              std::int32_t prefixLength) {
+  if (prefix == nullptr || prefixLength == 0) {
+    return true;
+  }
+
+  if (event.jsonPath->depth < prefixLength) {
+    return false;
+  }
+
+  JsonPath *current = event.jsonPath;
+
+  while (current != nullptr && current->depth > prefixLength) {
+    current = current->parent;
+  }
+
+  while (current != nullptr && current->parent != nullptr) {
+    if (current->component != prefix[current->depth - 1]) {
+      return false;
+    }
+    current = current->parent;
+  }
+
+  return current != nullptr && current->parent == nullptr;
 }
 
-bool isFalse(EventType type) {
-  return type == EventType::False;
+inline bool matchesPathPrefix(const Event &event,
+                              std::initializer_list<JsonPathComponent> prefix) {
+  return matchesPathPrefix(event, prefix.begin(),
+                           static_cast<std::int32_t>(prefix.size()));
 }
 
-bool isNull(EventType type) {
-  return type == EventType::Null;
+inline bool matchesExactPath(const Event &event, const JsonPathComponent *path,
+                             std::int32_t prefixLength) {
+  if (event.jsonPath->depth == prefixLength) {
+    return matchesPathPrefix(event, path, prefixLength);
+  } else {
+    return false;
+  }
+}
+
+inline bool matchesExactPath(const Event &event,
+                             std::initializer_list<JsonPathComponent> path) {
+  return matchesExactPath(event, path.begin(),
+                          static_cast<std::int32_t>(path.size()));
+}
+
+template <typename Callback>
+inline void forEachPathComponent(const Event &event, Callback callback) {
+  auto visit = [&](auto self, JsonPath *jsonPath) -> void {
+    if (jsonPath != nullptr && jsonPath->parent != nullptr) {
+      self(self, jsonPath->parent);
+      callback(jsonPath->component);
+    }
+  };
+  visit(visit, event.jsonPath);
 }
 
 }  // namespace KaitoTokyo::SimpleJsonReader

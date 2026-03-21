@@ -126,8 +126,8 @@ void printPostamble(std::string_view testName, std::string_view status) {
 void assertParseFails(std::string_view testName, std::string jsonString) {
   printPreamble(testName);
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), [](auto event) {});
+  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(
+      std::move(jsonString), [](SimpleJsonReader::Event event) {});
   if (err == SimpleJsonReader::ErrorType::OK) {
     throw std::runtime_error("Expected parseJson to fail, but got OK");
   } else {

@@ -18,7 +18,6 @@ add_test(NAME quotesInStrings COMMAND ValidJson_test quotesInStrings)
 add_test(NAME manyBackslashesBeforeQuote COMMAND ValidJson_test manyBackslashesBeforeQuote)
 
 add_executable(MalformedJson_test MalformedJson_test.cpp)
-add_compile_options(-fstack-usage)
 target_link_libraries(MalformedJson_test PRIVATE KaitoTokyo::SimpleJsonReader)
 add_test(NAME emptyInput COMMAND MalformedJson_test emptyInput)
 add_test(NAME unterminatedString COMMAND MalformedJson_test unterminatedString)
@@ -31,3 +30,11 @@ add_test(NAME startEndElementsMixedInObject COMMAND MalformedJson_test startEndE
 add_test(NAME closeBracketWhereObjectValueShouldBe COMMAND MalformedJson_test closeBracketWhereObjectValueShouldBe)
 add_test(NAME closeBraceWhereArrayValueShouldBe COMMAND MalformedJson_test closeBraceWhereArrayValueShouldBe)
 add_test(NAME nestedStartEndChaos COMMAND MalformedJson_test nestedStartEndChaos)
+
+
+add_executable(ReaderHelper_test ReaderHelper_test.cpp)
+target_link_libraries(ReaderHelper_test PRIVATE KaitoTokyo::SimpleJsonReader)
+add_test(NAME eventTypePredicates COMMAND ReaderHelper_test eventTypePredicates)
+add_test(NAME pathMatchingHelpersPointer COMMAND ReaderHelper_test pathMatchingHelpersPointer)
+add_test(NAME pathMatchingHelpersInitializerList COMMAND ReaderHelper_test pathMatchingHelpersInitializerList)
+

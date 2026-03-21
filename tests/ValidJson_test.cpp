@@ -26,7 +26,7 @@ constexpr auto Null = SimpleJsonReader::EventType::Null;
 struct ExpectedEvent {
   SimpleJsonReader::EventType type;
   std::string jsonPath;
-  std::string value;
+  std::string fragment;
 };
 
 void printPreamble(std::string_view testName);
@@ -157,7 +157,7 @@ void test_variousLanguages() {
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -178,7 +178,7 @@ void test_rootArray() {
       {EndArray, ".", "]"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -199,7 +199,7 @@ void test_rootString() {
       {String, ".", "root string"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -220,7 +220,7 @@ void test_rootNumber() {
       {Number, ".", "123"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -241,7 +241,7 @@ void test_rootTrue() {
       {True, ".", "true"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -262,7 +262,7 @@ void test_rootFalse() {
       {False, ".", "false"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -283,7 +283,7 @@ void test_rootNull() {
       {Null, ".", "null"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -328,7 +328,7 @@ void test_whitespaceAroundTokens() {
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -375,7 +375,7 @@ void test_quotesInStrings() {
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -408,7 +408,7 @@ void test_manyBackslashesBeforeQuote() {
       {EndArray, ".", "]"},
   };
 
-  auto handler = [&expectedEvents](auto event) {
+  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
@@ -455,7 +455,7 @@ void printPostamble(std::string_view testName, std::string_view status) {
 
 void printEvent(SimpleJsonReader::Event event) {
   std::cout << "Event:" << eventTypeToString(event.type)
-            << "\tValue:" << event.value
+            << "\tValue:" << event.fragment
             << "\tPath:" << jsonPathToString(event.jsonPath) << std::endl;
 }
 
@@ -471,10 +471,10 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
     throw std::runtime_error("Event type mismatch");
   }
 
-  if (receivedEvent.value != expectedEvent.value) {
-    std::cout << "Expected event value: " << expectedEvent.value
-              << ", but got: " << receivedEvent.value << std::endl;
-    throw std::runtime_error("Event value mismatch");
+  if (receivedEvent.fragment != expectedEvent.fragment) {
+    std::cout << "Expected event fragment: " << expectedEvent.fragment
+              << ", but got: " << receivedEvent.fragment << std::endl;
+    throw std::runtime_error("Event fragment mismatch");
   }
 
   if (jsonPathToString(receivedEvent.jsonPath) != expectedEvent.jsonPath) {

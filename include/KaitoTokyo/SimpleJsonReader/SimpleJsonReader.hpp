@@ -14,12 +14,9 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <functional>
-#include <optional>
-#include <string>
 #include <string_view>
+#include <string>
 #include <variant>
-#include <vector>
 
 namespace KaitoTokyo::SimpleJsonReader {
 
@@ -40,9 +37,11 @@ enum class EventType : std::uint8_t {
 };
 // clang-format on
 
+using JsonPathComponent = std::variant<std::string_view, std::size_t>;
+
 struct JsonPath {
   JsonPath* parent = nullptr;
-  std::variant<std::string_view, std::size_t> component = std::string_view{};
+  JsonPathComponent component = std::string_view{};
   std::int32_t depth = 0;
 };
 
@@ -51,8 +50,6 @@ struct Event {
   JsonPath* jsonPath;
   EventType type;
 };
-
-using EventHandler = std::function<void(Event)>;
 
 enum class ErrorType {
   OK,
@@ -78,17 +75,20 @@ namespace Detail {
 
 constexpr auto kSanitizedStructuralDoubleQuote = '\x01';
 
-ErrorType parseValue(std::string_view* json, EventHandler handler,
-                     JsonPath* jsonPath, std::int32_t depthLimit) noexcept;
+template <typename EventHandler>
+inline ErrorType parseValue(std::string_view* json, EventHandler handler,
+                            JsonPath* jsonPath,
+                            std::int32_t depthLimit = kDefaultMaxDepth) noexcept;
 
-void skipWhitespaces(std::string_view* json) noexcept {
+inline void skipWhitespaces(std::string_view* json) noexcept {
   using namespace std::string_view_literals;
   std::size_t first = json->find_first_not_of(" \t\n\r"sv);
   json->remove_prefix((first == std::string_view::npos) ? json->size() : first);
 }
 
-ErrorType parseString(std::string_view* json, EventHandler handler,
-                      JsonPath* jsonPath) noexcept {
+template <typename EventHandler>
+inline ErrorType parseString(std::string_view* json, EventHandler handler,
+                             JsonPath* jsonPath) noexcept {
   using namespace std::string_view_literals;
   std::size_t pos = json->find(kSanitizedStructuralDoubleQuote, 1);
   if (pos == std::string_view::npos) {
@@ -100,8 +100,9 @@ ErrorType parseString(std::string_view* json, EventHandler handler,
   }
 }
 
-ErrorType parseKey(std::string_view* json, EventHandler handler,
-                   JsonPath* jsonPath) noexcept {
+template <typename EventHandler>
+inline ErrorType parseKey(std::string_view* json, EventHandler handler,
+                          JsonPath* jsonPath) noexcept {
   std::size_t pos = json->find(kSanitizedStructuralDoubleQuote, 1);
   if (pos == std::string_view::npos) {
     return ErrorType::UnexpectedEndWhileParsingStringError;
@@ -114,8 +115,9 @@ ErrorType parseKey(std::string_view* json, EventHandler handler,
   }
 }
 
-ErrorType parseNumber(std::string_view* json, EventHandler handler,
-                      JsonPath* jsonPath) noexcept {
+template <typename EventHandler>
+inline ErrorType parseNumber(std::string_view* json, EventHandler handler,
+                             JsonPath* jsonPath) noexcept {
   using namespace std::string_view_literals;
   std::size_t end = json->find_first_of(",]} \t\n\r"sv);
   std::size_t length = (end == std::string_view::npos) ? json->size() : end;
@@ -124,8 +126,9 @@ ErrorType parseNumber(std::string_view* json, EventHandler handler,
   return ErrorType::OK;
 }
 
-ErrorType parseLiteral(std::string_view* json, EventHandler handler,
-                       JsonPath* jsonPath) noexcept {
+template <typename EventHandler>
+inline ErrorType parseLiteral(std::string_view* json, EventHandler handler,
+                              JsonPath* jsonPath) noexcept {
   using namespace std::string_view_literals;
   switch (json->front()) {
     case 't':
@@ -157,8 +160,10 @@ ErrorType parseLiteral(std::string_view* json, EventHandler handler,
   }
 }
 
-ErrorType parseArray(std::string_view* json, EventHandler handler,
-                     JsonPath* parentPath, std::uint32_t depthLimit) noexcept {
+template <typename EventHandler>
+inline ErrorType parseArray(std::string_view* json, EventHandler handler,
+                            JsonPath* parentPath,
+                            std::uint32_t depthLimit) noexcept {
   using namespace std::string_view_literals;
 
   std::size_t index = 0;
@@ -202,9 +207,10 @@ ErrorType parseArray(std::string_view* json, EventHandler handler,
   }
 }
 
-ErrorType parseObject(std::string_view* json, EventHandler handler,
-                      JsonPath* parentPath,
-                      std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+template <typename EventHandler>
+inline ErrorType parseObject(
+    std::string_view* json, EventHandler handler, JsonPath* parentPath,
+    std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
 
   json->remove_prefix(1);
@@ -256,9 +262,10 @@ ErrorType parseObject(std::string_view* json, EventHandler handler,
   }
 }
 
-ErrorType parseValue(std::string_view* json, EventHandler handler,
-                     JsonPath* jsonPath,
-                     std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+template <typename EventHandler>
+inline ErrorType parseValue(
+    std::string_view* json, EventHandler handler, JsonPath* jsonPath,
+    std::int32_t depthLimit) noexcept {
   skipWhitespaces(json);
 
   if (json->empty()) return ErrorType::EmptyJSONError;
@@ -295,23 +302,31 @@ ErrorType parseValue(std::string_view* json, EventHandler handler,
 
 /**
  * @brief Parses a JSON string and emits events to the provided handler.
- * @param jsonString The JSON string to parse. Move semantics are supported for efficiency.
+ * @param jsonString The JSON string to parse. Move semantics are supported for
+ * efficiency.
  * @param handler A synchronous callback function to receive parsing events.
  * @param depthLimit A hidden parameter to specify the maximum depth.
  * @return OK if parsing succeeded, otherwise an error code.
  * @code
  * parseJson(std::move(view), [](auto event) {
  *   // Write your code to handle JSON content here.
- *   // event          - The context of the parsing event. Only valid during this callback execution.
+ *   // event          - The context of the parsing event. Only valid during
+ * this callback execution.
  *   // event.type     - The type of parsing event like StartArrayo or String.
  *   // event.frament  - The raw JSON fragment corresponding to the event.
- *   // envet.jsonPath - The JSON path of the current event. Matcher helpers are available in the other header file.
+ *   // envet.jsonPath - The JSON path of the current event. Matcher helpers are
+ * available in the other header file.
  * });
  * @endcode
  */
-ErrorType parseJson(std::string jsonString, EventHandler handler,
-                    std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
+template <typename EventHandler>
+inline ErrorType parseJson(
+    std::string jsonString, EventHandler handler,
+    std::int32_t depthLimit = kDefaultMaxDepth) noexcept {
   using namespace std::string_view_literals;
+
+  static_assert(std::is_invocable_v<EventHandler, Event>,
+                "EventHandler must be invocable with a single Event parameter");
 
   std::size_t pos = 0;
   bool inString = false;

@@ -30,7 +30,7 @@ using namespace KaitoTokyo::SimpleJsonReader;
 
 std::string_view rawName;
 parseJson(std::move(buf), [](auto event) {  
-    if (isString(event) && matchPathPrefix(event, {"records", 3, "name"})) {
+    if (isString(event) && matchesPathPrefix(event, "records", 3, "name")) {
         rawName = event.fragment;
     }
 });
