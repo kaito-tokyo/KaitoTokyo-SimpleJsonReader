@@ -10,31 +10,22 @@
 
 #include "test_helper.hpp"
 
-using namespace KaitoTokyo;
-
-constexpr auto StartObject = SimpleJsonReader::EventType::StartObject;
-constexpr auto EndObject = SimpleJsonReader::EventType::EndObject;
-constexpr auto StartArray = SimpleJsonReader::EventType::StartArray;
-constexpr auto EndArray = SimpleJsonReader::EventType::EndArray;
-constexpr auto Key = SimpleJsonReader::EventType::Key;
-constexpr auto String = SimpleJsonReader::EventType::String;
-constexpr auto Number = SimpleJsonReader::EventType::Number;
-constexpr auto True = SimpleJsonReader::EventType::True;
-constexpr auto False = SimpleJsonReader::EventType::False;
-constexpr auto Null = SimpleJsonReader::EventType::Null;
+using namespace std::string_view_literals;
+using namespace KaitoTokyo::SimpleJsonReader;
+using KaitoTokyo::SimpleJsonReader::EventType;
 
 struct ExpectedEvent {
-  SimpleJsonReader::EventType type;
+  EventType type;
   std::string jsonPath;
   std::string fragment;
 };
 
 void printPreamble(std::string_view testName);
 void printPostamble(std::string_view testName, std::string_view status);
-void printEvent(SimpleJsonReader::Event event);
+void printEvent(Event event);
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 SimpleJsonReader::Event receivedEvent);
-void assertEnd(SimpleJsonReader::ErrorType err,
+                 Event receivedEvent);
+void assertEnd(ErrorType err,
                std::deque<ExpectedEvent>& expectedEvents);
 
 // MARK: - Test Cases
@@ -46,8 +37,8 @@ void test_emptyObject() {
 
   // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {StartObject, ".", "{"},
-      {EndObject,   ".", "}"},
+      {EventType::StartObject, ".", "{"},
+      {EventType::EndObject,   ".", "}"},
   };
   // clang-format on
 
@@ -55,8 +46,8 @@ void test_emptyObject() {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err =
+      parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("emptyObject", "PASSED");
 }
@@ -77,26 +68,27 @@ void test_nestedStringsAndJsonPaths() {
 
   // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {StartObject, ".",                      "{"},
-      {Key,         ".user",                  "user"},
-      {StartObject, ".user",                  "{"},
-      {Key,         ".user.name",             "name"},
-      {String,      ".user.name",             "山田太郎"},
-      {Key,         ".user.profile",          "profile"},
-      {StartObject, ".user.profile",          "{"},
-      {Key,         ".user.profile.nickname", "nickname"},
-      {String,      ".user.profile.nickname", "たろう"},
-      {EndObject,   ".user.profile",          "}"},
-      {EndObject,   ".user",                  "}"},
-      {Key,         ".items",                 "items"},
-      {StartArray,  ".items",                 "["},
-      {String,      ".items[0]",              "りんご"},
-      {String,      ".items[1]",              "🍎"},
-      {String,      ".items[2]",              "abc"},
-      {EndArray,    ".items",                 "]"},
-      {Key,         ".message",               "message"},
-      {String,      ".message",               "こんにちは世界"},
-      {EndObject,   ".",                      "}"},
+      {EventType::StartObject, ".",                      "{"},
+      {EventType::Key,         ".user",                  "user"},
+      {EventType::StartObject, ".user",                  "{"},
+      {EventType::Key,         ".user.name",             "name"},
+      {EventType::String,      ".user.name",             "山田太郎"},
+      {EventType::Key,         ".user.profile",          "profile"},
+      {EventType::StartObject, ".user.profile",          "{"},
+      {EventType::Key,         ".user.profile.nickname", "nickname"},
+      {EventType::String,      ".user.profile.nickname", "たろう"},
+      {EventType::EndObject,   ".user.profile",          "}"},
+      {EventType::EndObject,   ".user",                  "}"},
+      {EventType::Key,         ".items",                 "items"},
+      {EventType::StartArray,  ".items",                 "["},
+      {EventType::String,      ".items[0]",              "りんご"},
+      {EventType::String,      ".items[1]",              "🍎"},
+      {EventType::String,      ".items[2]",              "abc"},
+      {EventType::EndArray,    ".items",                 "]"},
+      {EventType::Key,         ".message",               "message"},
+      {EventType::String,      ".message",               "こんにちは世界"},
+      {EventType::EndObject,   ".",                      "}"},
+
   };
   // clang-format on
 
@@ -104,8 +96,7 @@ void test_nestedStringsAndJsonPaths() {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("nestedStringsAndJsonPaths", "PASSED");
 }
@@ -128,41 +119,41 @@ void test_variousLanguages() {
 
   // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {StartObject, ".", "{"},
-      {Key, ".languages", "languages"},
-      {StartObject, ".languages", "{"},
-      {Key, ".languages.japanese", "japanese"},
-      {String, ".languages.japanese", "こんにちは"},
-      {Key, ".languages.english", "english"},
-      {String, ".languages.english", "Hello"},
-      {Key, ".languages.chinese", "chinese"},
-      {String, ".languages.chinese", "你好"},
-      {Key, ".languages.korean", "korean"},
-      {String, ".languages.korean", "안녕하세요"},
-      {Key, ".languages.arabic", "arabic"},
-      {String, ".languages.arabic", "مرحبا"},
-      {Key, ".languages.russian", "russian"},
-      {String, ".languages.russian", "Здравствуйте"},
-      {EndObject, ".languages", "}"},
-      {Key, ".symbols", "symbols"},
-      {StartArray, ".symbols", "["},
-      {String, ".symbols[0]", "😀"},
-      {String, ".symbols[1]", "©"},
-      {String, ".symbols[2]", "€"},
-      {String, ".symbols[3]", "™"},
-      {EndArray, ".symbols", "]"},
-      {Key, ".mix", "mix"},
-      {String, ".mix", "東京 Tokyo 北京 서울"},
-      {EndObject, ".", "}"},
+      {EventType::StartObject, ".", "{"},
+      {EventType::Key, ".languages", "languages"},
+      {EventType::StartObject, ".languages", "{"},
+      {EventType::Key, ".languages.japanese", "japanese"},
+      {EventType::String, ".languages.japanese", "こんにちは"},
+      {EventType::Key, ".languages.english", "english"},
+      {EventType::String, ".languages.english", "Hello"},
+      {EventType::Key, ".languages.chinese", "chinese"},
+      {EventType::String, ".languages.chinese", "你好"},
+      {EventType::Key, ".languages.korean", "korean"},
+      {EventType::String, ".languages.korean", "안녕하세요"},
+      {EventType::Key, ".languages.arabic", "arabic"},
+      {EventType::String, ".languages.arabic", "مرحبا"},
+      {EventType::Key, ".languages.russian", "russian"},
+      {EventType::String, ".languages.russian", "Здравствуйте"},
+      {EventType::EndObject, ".languages", "}"},
+      {EventType::Key, ".symbols", "symbols"},
+      {EventType::StartArray, ".symbols", "["},
+      {EventType::String, ".symbols[0]", "😀"},
+      {EventType::String, ".symbols[1]", "©"},
+      {EventType::String, ".symbols[2]", "€"},
+      {EventType::String, ".symbols[3]", "™"},
+      {EventType::EndArray, ".symbols", "]"},
+      {EventType::Key, ".mix", "mix"},
+      {EventType::String, ".mix", "東京 Tokyo 北京 서울"},
+      {EventType::EndObject, ".", "}"},
+
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("variousLanguages", "PASSED");
 }
@@ -173,18 +164,17 @@ void test_rootArray() {
   std::string jsonString = R"(  ["root"]  )";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {StartArray, ".", "["},
-      {String, "[0]", "root"},
-      {EndArray, ".", "]"},
+      {EventType::StartArray, ".", "["},
+      {EventType::String, "[0]", "root"},
+      {EventType::EndArray, ".", "]"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootArray", "PASSED");
@@ -196,16 +186,15 @@ void test_rootString() {
   std::string jsonString = R"(  "root string"  )";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {String, ".", "root string"},
+      {EventType::String, ".", "root string"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootString", "PASSED");
@@ -217,16 +206,15 @@ void test_rootNumber() {
   std::string jsonString = R"(  123  )";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {Number, ".", "123"},
+      {EventType::Number, ".", "123"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootNumber", "PASSED");
@@ -238,16 +226,15 @@ void test_rootTrue() {
   std::string jsonString = R"(true)";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {True, ".", "true"},
+      {EventType::True, ".", "true"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootTrue", "PASSED");
@@ -259,16 +246,15 @@ void test_rootFalse() {
   std::string jsonString = R"( false )";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {False, ".", "false"},
+      {EventType::False, ".", "false"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootFalse", "PASSED");
@@ -280,16 +266,15 @@ void test_rootNull() {
   std::string jsonString = R"( null )";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {Null, ".", "null"},
+      {EventType::Null, ".", "null"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("rootNull", "PASSED");
@@ -310,31 +295,29 @@ void test_whitespaceAroundTokens() {
 
   // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {StartObject, ".",              "{"},
-      {Key,         ".outer",         "outer"},
-      {StartArray,  ".outer",         "["},
-      {StartObject, ".outer[0]",      "{"},
-      {Key,         ".outer[0].inner", "inner"},
-      {Number,      ".outer[0].inner", "1"},
-      {EndObject,   ".outer[0]",       "}"},
-      {Null,        ".outer[1]",       "null"},
-      {EndArray,    ".outer",          "]"},
-      {Key,         ".flag",           "flag"},
-      {True,        ".flag",           "true"},
-      {Key,         ".text",           "text"},
-      {String,      ".text",           "ok"},
-      {EndObject,   ".",               "}"},
-
+      {EventType::StartObject, ".",              "{"},
+      {EventType::Key,         ".outer",         "outer"},
+      {EventType::StartArray,  ".outer",         "["},
+      {EventType::StartObject, ".outer[0]",      "{"},
+      {EventType::Key,         ".outer[0].inner", "inner"},
+      {EventType::Number,      ".outer[0].inner", "1"},
+      {EventType::EndObject,   ".outer[0]",       "}"},
+      {EventType::Null,        ".outer[1]",       "null"},
+      {EventType::EndArray,    ".outer",          "]"},
+      {EventType::Key,         ".flag",           "flag"},
+      {EventType::True,        ".flag",           "true"},
+      {EventType::Key,         ".text",           "text"},
+      {EventType::String,      ".text",           "ok"},
+      {EventType::EndObject,   ".",               "}"},
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("whitespaceAroundTokens", "PASSED");
@@ -353,35 +336,34 @@ void test_quotesInStrings() {
 
   // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {StartObject, R"(.)",             R"({)"},
-      {Key,         R"(.single)",       R"(single)"},
-      {String,      R"(.single)",       R"(\")"},
-      {Key,         R"(.\"quoted\")", R"(\"quoted\")"},
-      {String,      R"(.\"quoted\")", R"(title)"},
-      {Key,         R"(.sentence)",     R"(sentence)"},
-      {String,      R"(.sentence)",     R"(She said \"hello\" and left)"},
-      {Key,         R"(.array)",        R"(array)"},
-      {StartArray,  R"(.array)",        R"([)"},
-      {String,      R"(.array[0])",     R"(a\"b)"},
-      {String,      R"(.array[1])",     R"(\"start)"},
-      {String,      R"(.array[2])",     R"(end\")"},
-      {EndArray,    R"(.array)",        R"(])"},
-      {Key,         R"(.nested)",       R"(nested)"},
-      {StartObject, R"(.nested)",       R"({)"},
-      {Key,         R"(.nested.inner)", R"(inner)"},
-      {String,      R"(.nested.inner)", R"(x \" y \" z)"},
-      {EndObject,   R"(.nested)",       R"(})"},
-      {EndObject,   R"(.)",             R"(})"},
+      {EventType::StartObject, R"(.)",             R"({)"},
+      {EventType::Key,         R"(.single)",       R"(single)"},
+      {EventType::String,      R"(.single)",       R"(\")"},
+      {EventType::Key,         R"(.\"quoted\")", R"(\"quoted\")"},
+      {EventType::String,      R"(.\"quoted\")", R"(title)"},
+      {EventType::Key,         R"(.sentence)",     R"(sentence)"},
+      {EventType::String,      R"(.sentence)",     R"(She said \"hello\" and left)"},
+      {EventType::Key,         R"(.array)",        R"(array)"},
+      {EventType::StartArray,  R"(.array)",        R"([)"},
+      {EventType::String,      R"(.array[0])",     R"(a\"b)"},
+      {EventType::String,      R"(.array[1])",     R"(\"start)"},
+      {EventType::String,      R"(.array[2])",     R"(end\")"},
+      {EventType::EndArray,    R"(.array)",        R"(])"},
+      {EventType::Key,         R"(.nested)",       R"(nested)"},
+      {EventType::StartObject, R"(.nested)",       R"({)"},
+      {EventType::Key,         R"(.nested.inner)", R"(inner)"},
+      {EventType::String,      R"(.nested.inner)", R"(x \" y \" z)"},
+      {EventType::EndObject,   R"(.nested)",       R"(})"},
+      {EventType::EndObject,   R"(.)",             R"(})"},
   };
   // clang-format on
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("quotesInStrings", "PASSED");
@@ -394,27 +376,26 @@ void test_manyBackslashesBeforeQuote() {
       R"(["trail\"","trail\\","trail\\\"","trail\\\\","trail\\\\\"","trail\\\\\\","trail\\\\\\\"","trail\\\\\\\\","trail\\\\\\\\\"","trail\\\\\\\\\\"])";
 
   std::deque<ExpectedEvent> expectedEvents{
-      {StartArray, ".", "["},
-      {String, "[0]", R"(trail\")"},
-      {String, "[1]", R"(trail\\)"},
-      {String, "[2]", R"(trail\\\")"},
-      {String, "[3]", R"(trail\\\\)"},
-      {String, "[4]", R"(trail\\\\\")"},
-      {String, "[5]", R"(trail\\\\\\)"},
-      {String, "[6]", R"(trail\\\\\\\")"},
-      {String, "[7]", R"(trail\\\\\\\\)"},
-      {String, "[8]", R"(trail\\\\\\\\\")"},
-      {String, "[9]", R"(trail\\\\\\\\\\)"},
-      {EndArray, ".", "]"},
+      {EventType::StartArray, ".", "["},
+      {EventType::String, "[0]", R"(trail\")"},
+      {EventType::String, "[1]", R"(trail\\)"},
+      {EventType::String, "[2]", R"(trail\\\")"},
+      {EventType::String, "[3]", R"(trail\\\\)"},
+      {EventType::String, "[4]", R"(trail\\\\\")"},
+      {EventType::String, "[5]", R"(trail\\\\\\)"},
+      {EventType::String, "[6]", R"(trail\\\\\\\")"},
+      {EventType::String, "[7]", R"(trail\\\\\\\\)"},
+      {EventType::String, "[8]", R"(trail\\\\\\\\\")"},
+      {EventType::String, "[9]", R"(trail\\\\\\\\\\)"},
+      {EventType::EndArray, ".", "]"},
   };
 
-  auto handler = [&expectedEvents](SimpleJsonReader::Event event) {
+  auto handler = [&expectedEvents](Event event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
 
-  SimpleJsonReader::ErrorType err =
-      SimpleJsonReader::parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
 
   printPostamble("manyBackslashesBeforeQuote", "PASSED");
@@ -453,14 +434,14 @@ void printPostamble(std::string_view testName, std::string_view status) {
             << ") ===" << std::endl;
 }
 
-void printEvent(SimpleJsonReader::Event event) {
+void printEvent(Event event) {
   std::cout << "Event:" << eventTypeToString(event.type)
             << "\tValue:" << event.fragment
             << "\tPath:" << jsonPathToString(event.jsonPath) << std::endl;
 }
 
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 SimpleJsonReader::Event receivedEvent) {
+                 Event receivedEvent) {
   ExpectedEvent expectedEvent = expectedEvents.front();
 
   if (receivedEvent.type != expectedEvent.type) {
@@ -484,9 +465,9 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
   expectedEvents.pop_front();
 }
 
-void assertEnd(SimpleJsonReader::ErrorType error,
+void assertEnd(ErrorType error,
                std::deque<ExpectedEvent>& expectedEvents) {
-  if (error != SimpleJsonReader::ErrorType::OK) {
+  if (error != ErrorType::OK) {
     throw std::runtime_error("Parsing error: " + errorTypeToString(error));
   }
   if (!expectedEvents.empty()) {

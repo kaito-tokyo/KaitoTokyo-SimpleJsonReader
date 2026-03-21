@@ -29,11 +29,11 @@ Recursive Descent JSON parser for C++ with SAX-like interface. Written by Kaito 
 using namespace KaitoTokyo::SimpleJsonReader;
 
 std::string_view rawName;
-parseJson(std::move(buf), [](auto event) {  
-    if (isString(event) && matchesPathPrefix(event, "records", 3, "name")) {
+parseJson(std::move(buf), [](SimpleJsonReader::Event event) {  
+    if (isString(event) && matchesPathPrefix(event, {"records", 3, "name"})) {
         rawName = event.fragment;
     }
 });
 
-std::cout << "Name:" << my_unescape(rawName) << std::endl;
+std::cout << "Name: " << my_unescape(rawName) << std::endl;
 ```

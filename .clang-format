@@ -8,11 +8,11 @@ AccessModifierOffset: -1
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: None
 AlignConsecutiveAssignments:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  AlignFunctionPointers: false
+  Enabled:         true
+  AcrossEmptyLines: true
+  AcrossComments:  true
+  AlignCompound:   true
+  AlignFunctionPointers: true
   PadOperators:    true
 AlignConsecutiveBitFields:
   Enabled:         false
@@ -22,12 +22,12 @@ AlignConsecutiveBitFields:
   AlignFunctionPointers: false
   PadOperators:    false
 AlignConsecutiveDeclarations:
-  Enabled:         false
-  AcrossEmptyLines: false
-  AcrossComments:  false
-  AlignCompound:   false
-  AlignFunctionPointers: false
-  PadOperators:    false
+  Enabled:         true
+  AcrossEmptyLines: true
+  AcrossComments:  true
+  AlignCompound:   true
+  AlignFunctionPointers: true
+  PadOperators:    true
 AlignConsecutiveMacros:
   Enabled:         false
   AcrossEmptyLines: false

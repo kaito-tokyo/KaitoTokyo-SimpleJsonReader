@@ -10,27 +10,21 @@
 
 #include "test_helper.hpp"
 
-using namespace KaitoTokyo;
-
-constexpr auto StartObject = SimpleJsonReader::EventType::StartObject;
-constexpr auto EndObject = SimpleJsonReader::EventType::EndObject;
-constexpr auto StartArray = SimpleJsonReader::EventType::StartArray;
-constexpr auto EndArray = SimpleJsonReader::EventType::EndArray;
-constexpr auto Key = SimpleJsonReader::EventType::Key;
-constexpr auto String = SimpleJsonReader::EventType::String;
-constexpr auto Number = SimpleJsonReader::EventType::Number;
+using namespace std::string_view_literals;
+using namespace KaitoTokyo::SimpleJsonReader;
+using KaitoTokyo::SimpleJsonReader::EventType;
 
 struct ExpectedEvent {
-  SimpleJsonReader::EventType type;
+  EventType   type;
   std::string jsonPath;
   std::string value;
 };
 
 void printPreamble(std::string_view testName);
 void printPostamble(std::string_view testName, std::string_view status);
-void printEvent(SimpleJsonReader::Event event);
+void printEvent(Event event);
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 SimpleJsonReader::Event receivedEvent);
+                 Event                      receivedEvent);
 void assertEnd(std::deque<ExpectedEvent>& expectedEvents);
 void assertParseFails(std::string_view testName, std::string jsonString);
 
@@ -126,9 +120,8 @@ void printPostamble(std::string_view testName, std::string_view status) {
 void assertParseFails(std::string_view testName, std::string jsonString) {
   printPreamble(testName);
 
-  SimpleJsonReader::ErrorType err = SimpleJsonReader::parseJson(
-      std::move(jsonString), [](SimpleJsonReader::Event event) {});
-  if (err == SimpleJsonReader::ErrorType::OK) {
+  ErrorType err = parseJson(std::move(jsonString), [](Event event) {});
+  if (err == ErrorType::OK) {
     throw std::runtime_error("Expected parseJson to fail, but got OK");
   } else {
     std::cout << "parseJson failed with error: " << errorTypeToString(err)
