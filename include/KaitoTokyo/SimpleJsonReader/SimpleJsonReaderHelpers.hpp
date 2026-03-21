@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <stdexcept>
+
 #include "SimpleJsonReader.hpp"
 
 namespace KaitoTokyo::SimpleJsonReader {
@@ -54,11 +56,15 @@ inline bool isNull(const Event &event) { return event.type == EventType::Null; }
 inline bool matchesPathPrefix(const Event &event,
                               const JsonPathComponent *prefix,
                               std::int32_t prefixLength) {
-  if (prefix == nullptr || prefixLength == 0) {
+  if (event.jsonPath == nullptr) {
+    throw std::invalid_argument("Event's jsonPath cannot be null");
+  } else if (prefixLength == 0) {
     return true;
+  } else if (prefix == nullptr) {
+    throw std::invalid_argument("Prefix cannot be null");
   }
 
-  if (event.jsonPath->depth < prefixLength) {
+  if (event.jsonPath == nullptr || event.jsonPath->depth < prefixLength) {
     return false;
   }
 
@@ -85,9 +91,17 @@ inline bool matchesPathPrefix(const Event &event,
 }
 
 inline bool matchesExactPath(const Event &event, const JsonPathComponent *path,
-                             std::int32_t prefixLength) {
-  if (event.jsonPath->depth == prefixLength) {
-    return matchesPathPrefix(event, path, prefixLength);
+                             std::int32_t pathLength) {
+  if (event.jsonPath == nullptr) {
+    throw std::invalid_argument("Event's jsonPath cannot be null");
+  } else if (pathLength == 0) {
+    return event.jsonPath->depth == 0;
+  } else if (path == nullptr) {
+    throw std::invalid_argument("Path cannot be null");
+  }
+
+  if (event.jsonPath->depth == pathLength) {
+    return matchesPathPrefix(event, path, pathLength);
   } else {
     return false;
   }
@@ -101,6 +115,10 @@ inline bool matchesExactPath(const Event &event,
 
 template <typename Callback>
 inline void forEachPathComponent(const Event &event, Callback callback) {
+  if (event.jsonPath == nullptr) {
+    throw std::invalid_argument("Event's jsonPath cannot be null");
+  }
+
   auto visit = [&](auto self, JsonPath *jsonPath) -> void {
     if (jsonPath != nullptr && jsonPath->parent != nullptr) {
       self(self, jsonPath->parent);
