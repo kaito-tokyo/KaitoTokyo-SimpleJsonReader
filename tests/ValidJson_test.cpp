@@ -15,7 +15,7 @@ using namespace KaitoTokyo::SimpleJsonReader;
 using KaitoTokyo::SimpleJsonReader::EventType;
 
 struct ExpectedEvent {
-  EventType type;
+  EventType   type;
   std::string jsonPath;
   std::string fragment;
 };
@@ -24,30 +24,26 @@ void printPreamble(std::string_view testName);
 void printPostamble(std::string_view testName, std::string_view status);
 void printEvent(Event event);
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 Event receivedEvent);
-void assertEnd(ErrorType err,
-               std::deque<ExpectedEvent>& expectedEvents);
+                 Event                      receivedEvent);
+void assertEnd(ErrorType err, std::deque<ExpectedEvent>& expectedEvents);
 
 // MARK: - Test Cases
 
 void test_emptyObject() {
   printPreamble("emptyObject");
 
-  std::string jsonString = "{}";
+  std::string               jsonString = "{}";
 
-  // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::StartObject, ".", "{"},
-      {EventType::EndObject,   ".", "}"},
+      {EventType::EndObject, ".", "}"},
   };
-  // clang-format on
 
   auto handler = [&expectedEvents](auto event) {
     printEvent(event);
     assertEvent(expectedEvents, event);
   };
-  ErrorType err =
-      parseJson(std::move(jsonString), handler);
+  ErrorType err = parseJson(std::move(jsonString), handler);
   assertEnd(err, expectedEvents);
   printPostamble("emptyObject", "PASSED");
 }
@@ -55,7 +51,7 @@ void test_emptyObject() {
 void test_nestedStringsAndJsonPaths() {
   printPreamble("nestedStringsAndJsonPaths");
 
-  std::string jsonString = R"({
+  std::string               jsonString = R"({
     "user": {
       "name": "山田太郎",
       "profile": {
@@ -66,31 +62,28 @@ void test_nestedStringsAndJsonPaths() {
     "message": "こんにちは世界"
   })";
 
-  // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {EventType::StartObject, ".",                      "{"},
-      {EventType::Key,         ".user",                  "user"},
-      {EventType::StartObject, ".user",                  "{"},
-      {EventType::Key,         ".user.name",             "name"},
-      {EventType::String,      ".user.name",             "山田太郎"},
-      {EventType::Key,         ".user.profile",          "profile"},
-      {EventType::StartObject, ".user.profile",          "{"},
-      {EventType::Key,         ".user.profile.nickname", "nickname"},
-      {EventType::String,      ".user.profile.nickname", "たろう"},
-      {EventType::EndObject,   ".user.profile",          "}"},
-      {EventType::EndObject,   ".user",                  "}"},
-      {EventType::Key,         ".items",                 "items"},
-      {EventType::StartArray,  ".items",                 "["},
-      {EventType::String,      ".items[0]",              "りんご"},
-      {EventType::String,      ".items[1]",              "🍎"},
-      {EventType::String,      ".items[2]",              "abc"},
-      {EventType::EndArray,    ".items",                 "]"},
-      {EventType::Key,         ".message",               "message"},
-      {EventType::String,      ".message",               "こんにちは世界"},
-      {EventType::EndObject,   ".",                      "}"},
-
+      {EventType::StartObject, ".", "{"},
+      {EventType::Key, ".user", "user"},
+      {EventType::StartObject, ".user", "{"},
+      {EventType::Key, ".user.name", "name"},
+      {EventType::String, ".user.name", "山田太郎"},
+      {EventType::Key, ".user.profile", "profile"},
+      {EventType::StartObject, ".user.profile", "{"},
+      {EventType::Key, ".user.profile.nickname", "nickname"},
+      {EventType::String, ".user.profile.nickname", "たろう"},
+      {EventType::EndObject, ".user.profile", "}"},
+      {EventType::EndObject, ".user", "}"},
+      {EventType::Key, ".items", "items"},
+      {EventType::StartArray, ".items", "["},
+      {EventType::String, ".items[0]", "りんご"},
+      {EventType::String, ".items[1]", "🍎"},
+      {EventType::String, ".items[2]", "abc"},
+      {EventType::EndArray, ".items", "]"},
+      {EventType::Key, ".message", "message"},
+      {EventType::String, ".message", "こんにちは世界"},
+      {EventType::EndObject, ".", "}"},
   };
-  // clang-format on
 
   auto handler = [&expectedEvents](auto event) {
     printEvent(event);
@@ -104,7 +97,7 @@ void test_nestedStringsAndJsonPaths() {
 void test_variousLanguages() {
   printPreamble("variousLanguages");
 
-  std::string jsonString = R"({
+  std::string               jsonString = R"({
     "languages": {
       "japanese": "こんにちは",
       "english": "Hello",
@@ -117,7 +110,6 @@ void test_variousLanguages() {
     "mix": "東京 Tokyo 北京 서울"
   })";
 
-  // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::StartObject, ".", "{"},
       {EventType::Key, ".languages", "languages"},
@@ -147,7 +139,6 @@ void test_variousLanguages() {
       {EventType::EndObject, ".", "}"},
 
   };
-  // clang-format on
 
   auto handler = [&expectedEvents](Event event) {
     printEvent(event);
@@ -161,7 +152,7 @@ void test_variousLanguages() {
 void test_rootArray() {
   printPreamble("rootArray");
 
-  std::string jsonString = R"(  ["root"]  )";
+  std::string               jsonString = R"(  ["root"]  )";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::StartArray, ".", "["},
@@ -183,7 +174,7 @@ void test_rootArray() {
 void test_rootString() {
   printPreamble("rootString");
 
-  std::string jsonString = R"(  "root string"  )";
+  std::string               jsonString = R"(  "root string"  )";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::String, ".", "root string"},
@@ -203,7 +194,7 @@ void test_rootString() {
 void test_rootNumber() {
   printPreamble("rootNumber");
 
-  std::string jsonString = R"(  123  )";
+  std::string               jsonString = R"(  123  )";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::Number, ".", "123"},
@@ -223,7 +214,7 @@ void test_rootNumber() {
 void test_rootTrue() {
   printPreamble("rootTrue");
 
-  std::string jsonString = R"(true)";
+  std::string               jsonString = R"(true)";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::True, ".", "true"},
@@ -243,7 +234,7 @@ void test_rootTrue() {
 void test_rootFalse() {
   printPreamble("rootFalse");
 
-  std::string jsonString = R"( false )";
+  std::string               jsonString = R"( false )";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::False, ".", "false"},
@@ -263,7 +254,7 @@ void test_rootFalse() {
 void test_rootNull() {
   printPreamble("rootNull");
 
-  std::string jsonString = R"( null )";
+  std::string               jsonString = R"( null )";
 
   std::deque<ExpectedEvent> expectedEvents{
       {EventType::Null, ".", "null"},
@@ -293,24 +284,22 @@ void test_whitespaceAroundTokens() {
       "  \"text\"  :  \"ok\"  \n"
       "} \n \t ";
 
-  // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {EventType::StartObject, ".",              "{"},
-      {EventType::Key,         ".outer",         "outer"},
-      {EventType::StartArray,  ".outer",         "["},
-      {EventType::StartObject, ".outer[0]",      "{"},
-      {EventType::Key,         ".outer[0].inner", "inner"},
-      {EventType::Number,      ".outer[0].inner", "1"},
-      {EventType::EndObject,   ".outer[0]",       "}"},
-      {EventType::Null,        ".outer[1]",       "null"},
-      {EventType::EndArray,    ".outer",          "]"},
-      {EventType::Key,         ".flag",           "flag"},
-      {EventType::True,        ".flag",           "true"},
-      {EventType::Key,         ".text",           "text"},
-      {EventType::String,      ".text",           "ok"},
-      {EventType::EndObject,   ".",               "}"},
+      {EventType::StartObject, ".", "{"},
+      {EventType::Key, ".outer", "outer"},
+      {EventType::StartArray, ".outer", "["},
+      {EventType::StartObject, ".outer[0]", "{"},
+      {EventType::Key, ".outer[0].inner", "inner"},
+      {EventType::Number, ".outer[0].inner", "1"},
+      {EventType::EndObject, ".outer[0]", "}"},
+      {EventType::Null, ".outer[1]", "null"},
+      {EventType::EndArray, ".outer", "]"},
+      {EventType::Key, ".flag", "flag"},
+      {EventType::True, ".flag", "true"},
+      {EventType::Key, ".text", "text"},
+      {EventType::String, ".text", "ok"},
+      {EventType::EndObject, ".", "}"},
   };
-  // clang-format on
 
   auto handler = [&expectedEvents](Event event) {
     printEvent(event);
@@ -326,7 +315,7 @@ void test_whitespaceAroundTokens() {
 void test_quotesInStrings() {
   printPreamble("quotesInStrings");
 
-  std::string jsonString = R"({
+  std::string               jsonString = R"({
   "single": "\"",
   "\"quoted\"": "title",
   "sentence": "She said \"hello\" and left",
@@ -334,29 +323,27 @@ void test_quotesInStrings() {
   "nested": { "inner": "x \" y \" z" }
 })";
 
-  // clang-format off
   std::deque<ExpectedEvent> expectedEvents{
-      {EventType::StartObject, R"(.)",             R"({)"},
-      {EventType::Key,         R"(.single)",       R"(single)"},
-      {EventType::String,      R"(.single)",       R"(\")"},
-      {EventType::Key,         R"(.\"quoted\")", R"(\"quoted\")"},
-      {EventType::String,      R"(.\"quoted\")", R"(title)"},
-      {EventType::Key,         R"(.sentence)",     R"(sentence)"},
-      {EventType::String,      R"(.sentence)",     R"(She said \"hello\" and left)"},
-      {EventType::Key,         R"(.array)",        R"(array)"},
-      {EventType::StartArray,  R"(.array)",        R"([)"},
-      {EventType::String,      R"(.array[0])",     R"(a\"b)"},
-      {EventType::String,      R"(.array[1])",     R"(\"start)"},
-      {EventType::String,      R"(.array[2])",     R"(end\")"},
-      {EventType::EndArray,    R"(.array)",        R"(])"},
-      {EventType::Key,         R"(.nested)",       R"(nested)"},
-      {EventType::StartObject, R"(.nested)",       R"({)"},
-      {EventType::Key,         R"(.nested.inner)", R"(inner)"},
-      {EventType::String,      R"(.nested.inner)", R"(x \" y \" z)"},
-      {EventType::EndObject,   R"(.nested)",       R"(})"},
-      {EventType::EndObject,   R"(.)",             R"(})"},
+      {EventType::StartObject, R"(.)", R"({)"},
+      {EventType::Key, R"(.single)", R"(single)"},
+      {EventType::String, R"(.single)", R"(\")"},
+      {EventType::Key, R"(.\"quoted\")", R"(\"quoted\")"},
+      {EventType::String, R"(.\"quoted\")", R"(title)"},
+      {EventType::Key, R"(.sentence)", R"(sentence)"},
+      {EventType::String, R"(.sentence)", R"(She said \"hello\" and left)"},
+      {EventType::Key, R"(.array)", R"(array)"},
+      {EventType::StartArray, R"(.array)", R"([)"},
+      {EventType::String, R"(.array[0])", R"(a\"b)"},
+      {EventType::String, R"(.array[1])", R"(\"start)"},
+      {EventType::String, R"(.array[2])", R"(end\")"},
+      {EventType::EndArray, R"(.array)", R"(])"},
+      {EventType::Key, R"(.nested)", R"(nested)"},
+      {EventType::StartObject, R"(.nested)", R"({)"},
+      {EventType::Key, R"(.nested.inner)", R"(inner)"},
+      {EventType::String, R"(.nested.inner)", R"(x \" y \" z)"},
+      {EventType::EndObject, R"(.nested)", R"(})"},
+      {EventType::EndObject, R"(.)", R"(})"},
   };
-  // clang-format on
 
   auto handler = [&expectedEvents](Event event) {
     printEvent(event);
@@ -441,7 +428,7 @@ void printEvent(Event event) {
 }
 
 void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 Event receivedEvent) {
+                 Event                      receivedEvent) {
   ExpectedEvent expectedEvent = expectedEvents.front();
 
   if (receivedEvent.type != expectedEvent.type) {
@@ -465,8 +452,7 @@ void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
   expectedEvents.pop_front();
 }
 
-void assertEnd(ErrorType error,
-               std::deque<ExpectedEvent>& expectedEvents) {
+void assertEnd(ErrorType error, std::deque<ExpectedEvent>& expectedEvents) {
   if (error != ErrorType::OK) {
     throw std::runtime_error("Parsing error: " + errorTypeToString(error));
   }
