@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <deque>
@@ -25,10 +25,14 @@ void assertParseFails(std::string testName, std::string jsonString) {
   SimpleJsonReader<string_view> reader;
   auto [tail, err] = reader.parseJsonUtf8(jsonString, [](auto) {});
   if (err == ErrorType::OK) {
-    std::cout << "## assertParseFails FAIL in " << testName << std::endl << std::endl;
-    std::cout << "Cause: Expected parseJson to fail, but got OK." << std::endl << std::endl;
+    std::cout << "## assertParseFails FAIL in " << testName << std::endl
+              << std::endl;
+    std::cout << "Cause: Expected parseJson to fail, but got OK." << std::endl
+              << std::endl;
   } else {
-    std::cout << "Expected parse failure, got error: " << errorTypeToString(err) << std::endl << std::endl;
+    std::cout << "Expected parse failure, got error: " << errorTypeToString(err)
+              << std::endl
+              << std::endl;
   }
 
   printPostamble(testName);
@@ -40,21 +44,15 @@ void test_unterminatedString() {
   assertParseFails(__func__, R"("unterminated)");
 }
 
-void test_unterminatedObject() {
-  assertParseFails(__func__, R"({"key": 1)");
-}
+void test_unterminatedObject() { assertParseFails(__func__, R"({"key": 1)"); }
 
-void test_unterminatedArray() {
-  assertParseFails(__func__, R"([true, false)");
-}
+void test_unterminatedArray() { assertParseFails(__func__, R"([true, false)"); }
 
 void test_missingFieldDelimiter() {
   assertParseFails(__func__, R"({"key" 1})");
 }
 
-void test_invalidTokenOrdering() {
-  assertParseFails(__func__, R"([1 false])");
-}
+void test_invalidTokenOrdering() { assertParseFails(__func__, R"([1 false])"); }
 
 void test_startEndElementsMixedAtRoot() {
   assertParseFails(__func__, R"([}])");
@@ -90,11 +88,12 @@ int main(int argc, char* argv[]) {
     std::string testName = g_testNames[i];
     TestFunc testFunc = g_testFunctions[i];
 
-    auto testNameContains = [&testName](const auto &arg) {
+    auto testNameContains = [&testName](const auto& arg) {
       return testName.find(arg) != std::string::npos;
     };
 
-    if (args.empty() || std::find_if(args.begin(), args.end(), testNameContains) != args.end()) {
+    if (args.empty() || std::find_if(args.begin(), args.end(),
+                                     testNameContains) != args.end()) {
       testFunc();
     }
   }

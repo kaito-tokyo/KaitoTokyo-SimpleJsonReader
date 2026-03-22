@@ -130,7 +130,8 @@ class SimpleJsonReader {
  public:
   using JsonPath_t = ::KaitoTokyo::SimpleJsonReader::JsonPath<string_view>;
   using Event_t = ::KaitoTokyo::SimpleJsonReader::Event<string_view>;
-  using ParseResult_t = ::KaitoTokyo::SimpleJsonReader::ParseResult<string_view>;
+  using ParseResult_t =
+      ::KaitoTokyo::SimpleJsonReader::ParseResult<string_view>;
 
   SimpleJsonReader(std::int32_t maxDepth = 1000) : maxDepth_(maxDepth) {}
 
@@ -179,7 +180,7 @@ class SimpleJsonReader {
   template <bool IsKey = false, typename EventHandler>
 #endif
   inline ParseResult_t parseString(string_view sv, EventHandler handler,
-                                 JsonPath_t* jsonPath) noexcept {
+                                   JsonPath_t* jsonPath) noexcept {
     const auto* start = sv.data();
     const auto* end = sv.data() + sv.size();
 
@@ -250,7 +251,7 @@ class SimpleJsonReader {
   template <typename EventHandler>
 #endif
   inline ParseResult_t parseNumber(string_view sv, EventHandler handler,
-                                 JsonPath_t* jsonPath) noexcept {
+                                   JsonPath_t* jsonPath) noexcept {
     const auto* end = sv.data() + sv.size();
 
     auto* p = sv.data();
@@ -294,7 +295,7 @@ class SimpleJsonReader {
   template <typename EventHandler>
 #endif
   inline ParseResult_t parseLiteral(string_view sv, EventHandler handler,
-                                  JsonPath_t* jsonPath) noexcept {
+                                    JsonPath_t* jsonPath) noexcept {
     const auto svSize = sv.size();
     const auto svData = sv.data();
     switch (svData[0]) {
@@ -333,8 +334,8 @@ class SimpleJsonReader {
   template <typename EventHandler>
 #endif
   inline ParseResult_t parseArray(string_view sv, EventHandler handler,
-                                JsonPath_t* parentPath,
-                                std::uint32_t depthLimit) noexcept {
+                                  JsonPath_t* parentPath,
+                                  std::uint32_t depthLimit) noexcept {
     if (depthLimit <= 0) return {sv, ErrorType::DepthLimitExceededInArrayError};
 
     handler(Event_t{{"[", 1}, parentPath, EventType::StartArray});
@@ -404,8 +405,8 @@ class SimpleJsonReader {
   template <typename EventHandler>
 #endif
   inline ParseResult_t parseObject(string_view sv, EventHandler handler,
-                                 JsonPath_t* parentPath,
-                                 std::int32_t depthLimit) noexcept {
+                                   JsonPath_t* parentPath,
+                                   std::int32_t depthLimit) noexcept {
     if (depthLimit <= 0)
       return {sv, ErrorType::DepthLimitExceededInObjectError};
 
@@ -506,8 +507,8 @@ class SimpleJsonReader {
   template <typename EventHandler>
 #endif
   inline ParseResult_t parseValue(string_view sv, EventHandler handler,
-                                JsonPath_t* jsonPath,
-                                std::int32_t depthLimit) noexcept {
+                                  JsonPath_t* jsonPath,
+                                  std::int32_t depthLimit) noexcept {
     if (sv.size() < 1) return {sv, ErrorType::EmptyJSONError};
 
     switch (sv.data()[0]) {
@@ -562,7 +563,7 @@ class SimpleJsonReader {
   template <typename EventHandler, typename String>
 #endif
   inline ParseResult_t parseJsonUtf8(String jsonString,
-                                   EventHandler handler) noexcept {
+                                     EventHandler handler) noexcept {
     string_view sv{reinterpret_cast<const char*>(jsonString.data()),
                    jsonString.size()};
     sv = skipWhitespaces(sv);

@@ -1,17 +1,17 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
+#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <cstddef>
 #include <deque>
 #include <iostream>
-#include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <vector>
 
 typedef void (*TestFunc)();
-extern const char *g_testNames[];
+extern const char* g_testNames[];
 extern const TestFunc g_testFunctions[];
 extern const int g_numTests;
 
@@ -72,7 +72,8 @@ std::string jsonPathToString(
   while (jsonPath != nullptr && jsonPath->parent != nullptr) {
     if (std::holds_alternative<string_view>(jsonPath->component)) {
       auto keySv = std::get<string_view>(jsonPath->component);
-      pathComponents[jsonPath->depth - 1] = "[\"" + std::string(keySv.data(), keySv.size()) + "\"]";
+      pathComponents[jsonPath->depth - 1] =
+          "[\"" + std::string(keySv.data(), keySv.size()) + "\"]";
     } else {
       std::size_t index = std::get<std::size_t>(jsonPath->component);
       pathComponents[jsonPath->depth - 1] = "[" + std::to_string(index) + "]";
@@ -144,8 +145,7 @@ void printEvent(const KaitoTokyo::SimpleJsonReader::Event<string_view>& event) {
 
 template <typename string_view>
 bool assertEvent(
-    const std::string& testName,
-    std::deque<ExpectedEvent>& expectedEvents,
+    const std::string& testName, std::deque<ExpectedEvent>& expectedEvents,
     const KaitoTokyo::SimpleJsonReader::Event<string_view>& receivedEvent) {
   bool ok = true;
 
@@ -153,28 +153,40 @@ bool assertEvent(
   expectedEvents.pop_front();
 
   if (receivedEvent.type != expectedEvent.type) {
-    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "## assertEvent FAIL in " << testName << std::endl
+              << std::endl;
     std::cout << "Cause: EventType is not as expected." << std::endl;
-    std::cout << "**Expected EventType**: " << eventTypeToString(expectedEvent.type) << std::endl;
-    std::cout << "**Received EventType**: " << eventTypeToString(receivedEvent.type) << std::endl << std::endl;
+    std::cout << "**Expected EventType**: "
+              << eventTypeToString(expectedEvent.type) << std::endl;
+    std::cout << "**Received EventType**: "
+              << eventTypeToString(receivedEvent.type) << std::endl
+              << std::endl;
     ok = false;
   }
 
-  std::string receivedFragment(receivedEvent.fragment.data(), receivedEvent.fragment.size());
+  std::string receivedFragment(receivedEvent.fragment.data(),
+                               receivedEvent.fragment.size());
   if (receivedFragment != expectedEvent.fragment) {
-    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "## assertEvent FAIL in " << testName << std::endl
+              << std::endl;
     std::cout << "Cause: EventFragment is not as expected." << std::endl;
-    std::cout << "**Expected EventFragment**: " << expectedEvent.fragment << std::endl;
-    std::cout << "**Received EventFragment**: " << receivedFragment << std::endl << std::endl;
+    std::cout << "**Expected EventFragment**: " << expectedEvent.fragment
+              << std::endl;
+    std::cout << "**Received EventFragment**: " << receivedFragment << std::endl
+              << std::endl;
     ok = false;
   }
 
   std::string receivedJsonPathString = jsonPathToString(receivedEvent.jsonPath);
   if (receivedJsonPathString != expectedEvent.jsonPathString) {
-    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "## assertEvent FAIL in " << testName << std::endl
+              << std::endl;
     std::cout << "Cause: EventJsonPath is not as expected." << std::endl;
-    std::cout << "**Expected EventJsonPath**: " << expectedEvent.jsonPathString << std::endl;
-    std::cout << "**Received EventJsonPath**: " << receivedJsonPathString << std::endl << std::endl;
+    std::cout << "**Expected EventJsonPath**: " << expectedEvent.jsonPathString
+              << std::endl;
+    std::cout << "**Received EventJsonPath**: " << receivedJsonPathString
+              << std::endl
+              << std::endl;
     ok = false;
   }
 

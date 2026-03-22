@@ -1,6 +1,12 @@
 #!/bin/bash
 
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 testSources=(*_test.cpp)
 for file in "${testSources[@]}"; do
@@ -9,24 +15,26 @@ for file in "${testSources[@]}"; do
   (
     echo '// SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>'
     echo '//'
-    echo '// SPDX-License-Identifier: CC0-1.0'
+    printf '// %s: Apache-2.0\n' SPDX-License-Identifier
     echo
     echo '#pragma once'
     echo
     echo 'const char *g_testNames[] = {'
     for func in "${testFuncs[@]}"; do
-      echo "  \"${func#test_}\","
+      echo "    \"${func#test_}\","
     done
     echo '};'
     echo
     echo 'const TestFunc g_testFunctions[] = {'
     for func in "${testFuncs[@]}"; do
-      echo "  $func,"
+      echo "    $func,"
     done
     echo '};'
     echo
     echo "const int g_numTests = ${#testFuncs[@]};"
   ) > "$file.hpp"
+
+  clang-format -i "$file.hpp"
 done
 
 

@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 
@@ -77,9 +77,9 @@ void test_nestedStringsAndJsonPaths() {
 
   SimpleJsonReader<string_view> reader;
   auto handler = [&expectedEvents](auto event) {
-        printEvent(event);
-        assertEvent(__func__, expectedEvents, event);
-      };
+    printEvent(event);
+    assertEvent(__func__, expectedEvents, event);
+  };
   auto result = reader.parseJsonUtf8(jsonString, handler);
   assertEnd(__func__, result, expectedEvents);
 
@@ -174,11 +174,10 @@ void test_rootString() {
   };
 
   SimpleJsonReader<string_view> reader;
-  auto result =
-      reader.parseJsonUtf8(jsonString, [&expectedEvents](auto event) {
-        printEvent(event);
-        assertEvent(__func__, expectedEvents, event);
-      });
+  auto result = reader.parseJsonUtf8(jsonString, [&expectedEvents](auto event) {
+    printEvent(event);
+    assertEvent(__func__, expectedEvents, event);
+  });
   assertEnd(__func__, result, expectedEvents);
 
   printPostamble(__func__);
@@ -388,11 +387,12 @@ int main(int argc, char* argv[]) {
     std::string testName = g_testNames[i];
     TestFunc testFunc = g_testFunctions[i];
 
-    auto testNameContains = [&testName](const auto &arg) {
+    auto testNameContains = [&testName](const auto& arg) {
       return testName.find(arg) != std::string::npos;
     };
 
-    if (args.empty() || std::find_if(args.begin(), args.end(), testNameContains) != args.end()) {
+    if (args.empty() || std::find_if(args.begin(), args.end(),
+                                     testNameContains) != args.end()) {
       testFunc();
     }
   }

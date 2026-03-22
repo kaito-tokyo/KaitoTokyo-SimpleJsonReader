@@ -1,9 +1,12 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp>
+#include <array>
+#include <iostream>
+#include <vector>
 
 #include "test_helper.hpp"
 
