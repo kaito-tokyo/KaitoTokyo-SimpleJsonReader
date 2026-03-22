@@ -25,9 +25,11 @@ inline bool isStartObject(const Event& event) {
 
 inline bool isEndObject(const Event& event) {
   return event.type == EventType::EndObject;
-}@
+}
+@
 
-inline bool isStartArray(const Event& event) {
+    inline bool
+    isStartArray(const Event& event) {
   return event.type == EventType::StartArray;
 }
 
