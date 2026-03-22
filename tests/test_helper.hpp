@@ -2,12 +2,29 @@
 //
 // SPDX-License-Identifier: CC0-1.0
 
+#include <cstddef>
+#include <deque>
+#include <iostream>
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
-#include <cstdint>
-#include <string>
 #include <string_view>
-#include <variant>
+#include <string>
 #include <vector>
+
+typedef void (*TestFunc)();
+extern const char *g_testNames[];
+extern const TestFunc g_testFunctions[];
+extern const int g_numTests;
+
+inline std::ostream& operator<<(
+    std::ostream& os, const KaitoTokyo::SimpleJsonReader::C8StringView& sv) {
+  return os << std::string_view(sv.data(), sv.size());
+}
+
+struct ExpectedEvent {
+  KaitoTokyo::SimpleJsonReader::EventType type;
+  std::string jsonPathString;
+  std::string fragment;
+};
 
 std::string eventTypeToString(KaitoTokyo::SimpleJsonReader::EventType type) {
   using KaitoTokyo::SimpleJsonReader::EventType;
@@ -47,14 +64,15 @@ std::string eventTypeToString(KaitoTokyo::SimpleJsonReader::EventType type) {
   }
 }
 
-std::string jsonPathToString(KaitoTokyo::SimpleJsonReader::JsonPath* jsonPath) {
+template <typename string_view>
+std::string jsonPathToString(
+    KaitoTokyo::SimpleJsonReader::JsonPath<string_view>* jsonPath) {
   std::vector<std::string> pathComponents(jsonPath->depth);
 
   while (jsonPath != nullptr && jsonPath->parent != nullptr) {
-    if (std::holds_alternative<std::string_view>(jsonPath->component)) {
-      std::string_view fieldName =
-          std::get<std::string_view>(jsonPath->component);
-      pathComponents[jsonPath->depth - 1] = "." + std::string(fieldName);
+    if (std::holds_alternative<string_view>(jsonPath->component)) {
+      auto keySv = std::get<string_view>(jsonPath->component);
+      pathComponents[jsonPath->depth - 1] = "[\"" + std::string(keySv.data(), keySv.size()) + "\"]";
     } else {
       std::size_t index = std::get<std::size_t>(jsonPath->component);
       pathComponents[jsonPath->depth - 1] = "[" + std::to_string(index) + "]";
@@ -62,15 +80,11 @@ std::string jsonPathToString(KaitoTokyo::SimpleJsonReader::JsonPath* jsonPath) {
     jsonPath = jsonPath->parent;
   }
 
-  if (pathComponents.empty()) {
-    return ".";
-  } else {
-    std::string result;
-    for (const std::string& component : pathComponents) {
-      result += component;
-    }
-    return result;
+  std::string resultString = ".";
+  for (const auto& component : pathComponents) {
+    resultString += component;
   }
+  return resultString;
 }
 
 std::string errorTypeToString(KaitoTokyo::SimpleJsonReader::ErrorType error) {
@@ -110,4 +124,94 @@ std::string errorTypeToString(KaitoTokyo::SimpleJsonReader::ErrorType error) {
     default:
       return "(INVALID)";
   }
+}
+
+void printPreamble(std::string testName) {
+  std::cout << "=== TEST CASE STARTED: " << testName << " ===" << std::endl;
+}
+
+void printPostamble(std::string testName) {
+  std::cout << "=== TEST CASE FINISHED: " << testName << " ===" << std::endl
+            << std::endl;
+}
+
+template <typename string_view>
+void printEvent(const KaitoTokyo::SimpleJsonReader::Event<string_view>& event) {
+  std::cout << "Event:" << eventTypeToString(event.type)
+            << "\tFragment:" << event.fragment
+            << "\tPath:" << jsonPathToString(event.jsonPath) << std::endl;
+}
+
+template <typename string_view>
+bool assertEvent(
+    const std::string& testName,
+    std::deque<ExpectedEvent>& expectedEvents,
+    const KaitoTokyo::SimpleJsonReader::Event<string_view>& receivedEvent) {
+  bool ok = true;
+
+  ExpectedEvent expectedEvent = expectedEvents.front();
+  expectedEvents.pop_front();
+
+  if (receivedEvent.type != expectedEvent.type) {
+    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "Cause: EventType is not as expected." << std::endl;
+    std::cout << "**Expected EventType**: " << eventTypeToString(expectedEvent.type) << std::endl;
+    std::cout << "**Received EventType**: " << eventTypeToString(receivedEvent.type) << std::endl << std::endl;
+    ok = false;
+  }
+
+  std::string receivedFragment(receivedEvent.fragment.data(), receivedEvent.fragment.size());
+  if (receivedFragment != expectedEvent.fragment) {
+    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "Cause: EventFragment is not as expected." << std::endl;
+    std::cout << "**Expected EventFragment**: " << expectedEvent.fragment << std::endl;
+    std::cout << "**Received EventFragment**: " << receivedFragment << std::endl << std::endl;
+    ok = false;
+  }
+
+  std::string receivedJsonPathString = jsonPathToString(receivedEvent.jsonPath);
+  if (receivedJsonPathString != expectedEvent.jsonPathString) {
+    std::cout << "## assertEvent FAIL in " << testName << std::endl << std::endl;
+    std::cout << "Cause: EventJsonPath is not as expected." << std::endl;
+    std::cout << "**Expected EventJsonPath**: " << expectedEvent.jsonPathString << std::endl;
+    std::cout << "**Received EventJsonPath**: " << receivedJsonPathString << std::endl << std::endl;
+    ok = false;
+  }
+
+  return ok;
+}
+
+template <typename string_view>
+bool assertEnd(
+    const std::string& testName,
+    const KaitoTokyo::SimpleJsonReader::ParseResult<string_view>& result,
+    const std::deque<ExpectedEvent>& remainingExpectedEvents) {
+  auto [tail, err] = result;
+  if (err != KaitoTokyo::SimpleJsonReader::ErrorType::OK) {
+    std::cout << "## assertEnd FAIL in " << testName << std::endl << std::endl;
+    std::cout << "Cause: Result is not ErrorType::OK." << std::endl
+              << std::endl;
+    std::cout << "**ErrorType**: " << errorTypeToString(err) << std::endl
+              << std::endl;
+    std::cout << "<Tail>" << std::endl;
+    std::cout << tail << std::endl;
+    std::cout << "</Tail>" << std::endl;
+    return false;
+  }
+
+  if (!remainingExpectedEvents.empty()) {
+    std::cout << "## assertEnd FAIL in " << testName << std::endl << std::endl;
+    std::cout << "Cause: Not all expected events were received." << std::endl
+              << std::endl;
+    std::cout << "<Tail>" << std::endl;
+    std::cout << tail << std::endl;
+    std::cout << "</Tail>" << std::endl << std::endl;
+    std::cout << "<RemainingExpectedEvents>" << std::endl;
+    std::cout << remainingExpectedEvents.size()
+              << " event(s) were expected but not received:" << std::endl;
+    std::cout << "</RemainingExpectedEvents>" << std::endl;
+    return false;
+  }
+
+  return true;
 }

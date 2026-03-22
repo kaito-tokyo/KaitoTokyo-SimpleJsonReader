@@ -18,43 +18,43 @@
 
 namespace KaitoTokyo::SimpleJsonReader {
 
-inline bool isStartObject(const Event &event) {
+inline bool isStartObject(const Event& event) {
   return event.type == EventType::StartObject;
 }
 
-inline bool isEndObject(const Event &event) {
+inline bool isEndObject(const Event& event) {
   return event.type == EventType::EndObject;
 }
 
-inline bool isStartArray(const Event &event) {
+inline bool isStartArray(const Event& event) {
   return event.type == EventType::StartArray;
 }
 
-inline bool isEndArray(const Event &event) {
+inline bool isEndArray(const Event& event) {
   return event.type == EventType::EndArray;
 }
 
-inline bool isKey(const Event &event) { return event.type == EventType::Key; }
+inline bool isKey(const Event& event) { return event.type == EventType::Key; }
 
-inline bool isString(const Event &event) {
+inline bool isString(const Event& event) {
   return event.type == EventType::String;
 }
 
-inline bool isNumber(const Event &event) {
+inline bool isNumber(const Event& event) {
   return event.type == EventType::Number;
 }
 
-inline bool isTrue(const Event &event) { return event.type == EventType::True; }
+inline bool isTrue(const Event& event) { return event.type == EventType::True; }
 
-inline bool isFalse(const Event &event) {
+inline bool isFalse(const Event& event) {
   return event.type == EventType::False;
 }
 
-inline bool isNull(const Event &event) { return event.type == EventType::Null; }
+inline bool isNull(const Event& event) { return event.type == EventType::Null; }
 
-inline bool matchesPathPrefix(const Event             &event,
-                              const JsonPathComponent *prefix,
-                              std::int32_t             prefixLength) {
+inline bool matchesPathPrefix(const Event& event,
+                              const JsonPathComponent* prefix,
+                              std::int32_t prefixLength) {
   if (event.jsonPath == nullptr) {
     throw std::invalid_argument("Event's jsonPath cannot be null");
   } else if (prefixLength == 0) {
@@ -67,7 +67,7 @@ inline bool matchesPathPrefix(const Event             &event,
     return false;
   }
 
-  JsonPath *current = event.jsonPath;
+  JsonPath* current = event.jsonPath;
 
   while (current != nullptr && current->depth > prefixLength) {
     current = current->parent;
@@ -83,13 +83,13 @@ inline bool matchesPathPrefix(const Event             &event,
   return current != nullptr && current->parent == nullptr;
 }
 
-inline bool matchesPathPrefix(const Event                             &event,
+inline bool matchesPathPrefix(const Event& event,
                               std::initializer_list<JsonPathComponent> prefix) {
   return matchesPathPrefix(event, prefix.begin(),
                            static_cast<std::int32_t>(prefix.size()));
 }
 
-inline bool matchesExactPath(const Event &event, const JsonPathComponent *path,
+inline bool matchesExactPath(const Event& event, const JsonPathComponent* path,
                              std::int32_t pathLength) {
   if (event.jsonPath == nullptr) {
     throw std::invalid_argument("Event's jsonPath cannot be null");
@@ -106,19 +106,19 @@ inline bool matchesExactPath(const Event &event, const JsonPathComponent *path,
   }
 }
 
-inline bool matchesExactPath(const Event                             &event,
+inline bool matchesExactPath(const Event& event,
                              std::initializer_list<JsonPathComponent> path) {
   return matchesExactPath(event, path.begin(),
                           static_cast<std::int32_t>(path.size()));
 }
 
 template <typename Callback>
-inline void forEachPathComponent(const Event &event, Callback callback) {
+inline void forEachPathComponent(const Event& event, Callback callback) {
   if (event.jsonPath == nullptr) {
     throw std::invalid_argument("Event's jsonPath cannot be null");
   }
 
-  auto visit = [&](auto self, JsonPath *jsonPath) -> void {
+  auto visit = [&](auto self, JsonPath* jsonPath) -> void {
     if (jsonPath != nullptr && jsonPath->parent != nullptr) {
       self(self, jsonPath->parent);
       callback(jsonPath->component);
