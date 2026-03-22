@@ -5,8 +5,9 @@
 /**
  * @file    KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp
  * @brief   Recursive Descent JSON parser for C++ with SAX-like interface.
- * @version 2026.03.21
  * @author  Kaito Udagawa <umireon@kaito.tokyo>
+ * @version 0.1.0
+ * @date    2026-03-21
  * @see     https://github.com/kaito-tokyo/KaitoTokyo-SimpleJsonReader/
  */
 
