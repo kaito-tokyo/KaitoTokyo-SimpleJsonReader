@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp>
@@ -14,14 +14,14 @@ using namespace std::string_view_literals;
 using namespace KaitoTokyo::SimpleJsonReader;
 using KaitoTokyo::SimpleJsonReader::EventType;
 
-void  printPreamble(std::string_view testName);
-void  printPostamble(std::string_view testName, std::string_view status);
+void printPreamble(std::string_view testName);
+void printPostamble(std::string_view testName, std::string_view status);
 
 // MARK: - Test Cases
 
 Event undefinedEvent{"", nullptr, EventType::Undefined};
 
-void  test_isStartObject() {
+void test_isStartObject() {
   printPreamble("isStartObject");
 
   Event event{"", nullptr, EventType::StartObject};
@@ -185,7 +185,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath() {
   printPreamble("matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath");
 
   JsonPath root{nullptr, ""sv, 0};
-  Event    event{"", &root, EventType::String};
+  Event event{"", &root, EventType::String};
 
   if (!matchesPathPrefix(event, nullptr, 0)) {
     throw std::runtime_error("Expected an empty prefix to match an empty path");
@@ -199,7 +199,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath() {
 
   JsonPath root{nullptr, ""sv, 0};
   JsonPath child{&root, "child"sv, 1};
-  Event    event{"", &child, EventType::String};
+  Event event{"", &child, EventType::String};
 
   if (!matchesPathPrefix(event, nullptr, 0)) {
     throw std::runtime_error(
@@ -216,7 +216,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath() {
   JsonPath root{nullptr, ""sv, 0};
   JsonPath child1{&root, "child1"sv, 1};
   JsonPath child2{&child1, "child2"sv, 2};
-  Event    event{"", &child2, EventType::String};
+  Event event{"", &child2, EventType::String};
 
   if (!matchesPathPrefix(event, nullptr, 0)) {
     throw std::runtime_error(
@@ -230,9 +230,9 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath() {
 void test_matchesPathPrefix_stringPrefixCanMatchStringPath() {
   printPreamble("matchesPathPrefix_stringPrefixCanMatchStringPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, "child"sv, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, "child"sv, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
   if (!matchesPathPrefix(event, prefix.data(), 1)) {
@@ -245,9 +245,9 @@ void test_matchesPathPrefix_stringPrefixCanMatchStringPath() {
 void test_matchesPathPrefix_indexPrefixCanMatchIndexPath() {
   printPreamble("matchesPathPrefix_indexPrefixCanMatchIndexPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, std::size_t{0}, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, std::size_t{0}, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 1> prefix{JsonPathComponent{std::size_t{0}}};
   if (!matchesPathPrefix(event, prefix.data(), 1)) {
@@ -260,9 +260,9 @@ void test_matchesPathPrefix_indexPrefixCanMatchIndexPath() {
 void test_matchesPathPrefix_indexPrefixNeverMatchStringPath() {
   printPreamble("matchesPathPrefix_indexPrefixNeverMatchStringPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, "child"sv, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, "child"sv, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 1> prefix{JsonPathComponent{std::size_t{0}}};
   if (matchesPathPrefix(event, prefix.data(), 1)) {
@@ -276,9 +276,9 @@ void test_matchesPathPrefix_indexPrefixNeverMatchStringPath() {
 void test_matchesPathPrefix_stringPrefixNeverMatchIndexPath() {
   printPreamble("matchesPathPrefix_stringPrefixNeverMatchIndexPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, std::size_t{0}, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, std::size_t{0}, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
   if (matchesPathPrefix(event, prefix.data(), 1)) {
@@ -293,10 +293,10 @@ void test_matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath() {
   printPreamble(
       "matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child1{&root, "child1"sv, 1};
-  JsonPath                         child2{&child1, std::size_t{0}, 2};
-  Event                            event{"", &child2, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child1{&root, "child1"sv, 1};
+  JsonPath child2{&child1, std::size_t{0}, 2};
+  Event event{"", &child2, EventType::String};
 
   std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child1"sv},
                                           JsonPathComponent{std::size_t{0}}};
@@ -314,10 +314,10 @@ void test_matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath() {
   printPreamble(
       "matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child1{&root, std::size_t{0}, 1};
-  JsonPath                         child2{&child1, "child2"sv, 2};
-  Event                            event{"", &child2, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child1{&root, std::size_t{0}, 1};
+  JsonPath child2{&child1, "child2"sv, 2};
+  Event event{"", &child2, EventType::String};
 
   std::array<JsonPathComponent, 2> prefix{JsonPathComponent{std::size_t{0}},
                                           JsonPathComponent{"child2"sv}};
@@ -334,8 +334,8 @@ void test_matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath() {
 void test_matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath() {
   printPreamble("matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  Event                            event{"", &root, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  Event event{"", &root, EventType::String};
 
   std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
   if (matchesPathPrefix(event, prefix.data(), 1)) {
@@ -351,9 +351,9 @@ void test_matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath() {
   printPreamble(
       "matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, "child"sv, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, "child"sv, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child"sv},
                                           JsonPathComponent{"other"sv}};
@@ -373,7 +373,7 @@ void test_matchesPathPrefix_initializerList() {
   JsonPath root{nullptr, ""sv, 0};
   JsonPath child1{&root, "child1"sv, 1};
   JsonPath child2{&child1, std::size_t{0}, 2};
-  Event    event{"", &child2, EventType::String};
+  Event event{"", &child2, EventType::String};
 
   if (!matchesPathPrefix(event, {"child1"sv, std::size_t{0}})) {
     throw std::runtime_error(
@@ -386,9 +386,9 @@ void test_matchesPathPrefix_initializerList() {
 void test_matchesExactPath_neverMatchIfLengthMismatch() {
   printPreamble("matchesExactPath_neverMatchIfLengthMismatch");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child{&root, "child"sv, 1};
-  Event                            event{"", &child, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child{&root, "child"sv, 1};
+  Event event{"", &child, EventType::String};
 
   std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child"sv},
                                           JsonPathComponent{"grandchild"sv}};
@@ -403,10 +403,10 @@ void test_matchesExactPath_neverMatchIfLengthMismatch() {
 void test_matchesExactPath_matchesWhenLengthAndComponentsMatch() {
   printPreamble("matchesExactPath_matchesWhenLengthAndComponentsMatch");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child1{&root, "child1"sv, 1};
-  JsonPath                         child2{&child1, std::size_t{0}, 2};
-  Event                            event{"", &child2, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child1{&root, "child1"sv, 1};
+  JsonPath child2{&child1, std::size_t{0}, 2};
+  Event event{"", &child2, EventType::String};
 
   std::array<JsonPathComponent, 2> path{JsonPathComponent{"child1"sv},
                                         JsonPathComponent{std::size_t{0}}};
@@ -424,10 +424,10 @@ void test_matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch() {
   printPreamble(
       "matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch");
 
-  JsonPath                         root{nullptr, ""sv, 0};
-  JsonPath                         child1{&root, "child1"sv, 1};
-  JsonPath                         child2{&child1, std::size_t{0}, 2};
-  Event                            event{"", &child2, EventType::String};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child1{&root, "child1"sv, 1};
+  JsonPath child2{&child1, std::size_t{0}, 2};
+  Event event{"", &child2, EventType::String};
 
   std::array<JsonPathComponent, 2> path{JsonPathComponent{"child1"sv},
                                         JsonPathComponent{std::size_t{1}}};
@@ -448,7 +448,7 @@ void test_matchesExactPath_initializerList() {
   JsonPath root{nullptr, ""sv, 0};
   JsonPath child1{&root, "child1"sv, 1};
   JsonPath child2{&child1, std::size_t{0}, 2};
-  Event    event{"", &child2, EventType::String};
+  Event event{"", &child2, EventType::String};
 
   if (!matchesExactPath(event, {"child1"sv, std::size_t{0}})) {
     throw std::runtime_error(
@@ -461,12 +461,12 @@ void test_matchesExactPath_initializerList() {
 void test_forEachPathComponent() {
   printPreamble("forEachPathComponent");
 
-  JsonPath                       root{nullptr, ""sv, 0};
-  JsonPath                       child1{&root, "child1"sv, 1};
-  JsonPath                       child2{&child1, std::size_t{2}, 2};
-  JsonPath                       child3{&child2, "child3"sv, 3};
+  JsonPath root{nullptr, ""sv, 0};
+  JsonPath child1{&root, "child1"sv, 1};
+  JsonPath child2{&child1, std::size_t{2}, 2};
+  JsonPath child3{&child2, "child3"sv, 3};
 
-  Event                          event{"", &child3, EventType::String};
+  Event event{"", &child3, EventType::String};
 
   std::vector<JsonPathComponent> components;
   forEachPathComponent(event,

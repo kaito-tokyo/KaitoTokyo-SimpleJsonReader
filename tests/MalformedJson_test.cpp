@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: Apache-2.0
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <deque>
@@ -10,123 +10,95 @@
 
 #include "test_helper.hpp"
 
-using namespace std::string_view_literals;
 using namespace KaitoTokyo::SimpleJsonReader;
 using KaitoTokyo::SimpleJsonReader::EventType;
 
-struct ExpectedEvent {
-  EventType   type;
-  std::string jsonPath;
-  std::string value;
-};
+#ifdef USE_STD_STRING_VIEW
+using string_view = std::string_view;
+#else
+using string_view = KaitoTokyo::SimpleJsonReader::C8StringView;
+#endif
 
-void printPreamble(std::string_view testName);
-void printPostamble(std::string_view testName, std::string_view status);
-void printEvent(Event event);
-void assertEvent(std::deque<ExpectedEvent>& expectedEvents,
-                 Event                      receivedEvent);
-void assertEnd(std::deque<ExpectedEvent>& expectedEvents);
-void assertParseFails(std::string_view testName, std::string jsonString);
+void assertParseFails(std::string testName, std::string jsonString) {
+  printPreamble(testName);
 
-// MARK: - Test Cases
+  SimpleJsonReader<string_view> reader;
+  auto [tail, err] = reader.parseJsonUtf8(jsonString, [](auto) {});
+  if (err == ErrorType::OK) {
+    std::cout << "## assertParseFails FAIL in " << testName << std::endl
+              << std::endl;
+    std::cout << "Cause: Expected parseJson to fail, but got OK." << std::endl
+              << std::endl;
+  } else {
+    std::cout << "Expected parse failure, got error: " << errorTypeToString(err)
+              << std::endl
+              << std::endl;
+  }
 
-void test_emptyString() { assertParseFails("emptyString", ""); }
+  printPostamble(testName);
+}
+
+void test_emptyString() { assertParseFails(__func__, ""); }
 
 void test_unterminatedString() {
-  assertParseFails("unterminatedString", R"("unterminated)");
+  assertParseFails(__func__, R"("unterminated)");
 }
 
-void test_unterminatedObject() {
-  assertParseFails("unterminatedObject", R"({"key": 1)");
-}
+void test_unterminatedObject() { assertParseFails(__func__, R"({"key": 1)"); }
 
-void test_unterminatedArray() {
-  assertParseFails("unterminatedArray", R"([true, false)");
-}
+void test_unterminatedArray() { assertParseFails(__func__, R"([true, false)"); }
 
 void test_missingFieldDelimiter() {
-  assertParseFails("missingFieldDelimiter", R"({"key" 1})");
+  assertParseFails(__func__, R"({"key" 1})");
 }
 
-void test_invalidTokenOrdering() {
-  assertParseFails("invalidTokenOrdering", R"([1 false])");
-}
+void test_invalidTokenOrdering() { assertParseFails(__func__, R"([1 false])"); }
 
 void test_startEndElementsMixedAtRoot() {
-  assertParseFails("startEndElementsMixedAtRoot", R"([}])");
+  assertParseFails(__func__, R"([}])");
 }
 
 void test_startEndElementsMixedInObject() {
-  assertParseFails("startEndElementsMixedInObject", R"({])");
+  assertParseFails(__func__, R"({])");
 }
 
 void test_closeBracketWhereObjectValueShouldBe() {
-  assertParseFails("closeBracketWhereObjectValueShouldBe", R"({"a": ]})");
+  assertParseFails(__func__, R"({"a": ]})");
 }
 
 void test_closeBraceWhereArrayValueShouldBe() {
-  assertParseFails("closeBraceWhereArrayValueShouldBe", R"([1, }])");
+  assertParseFails(__func__, R"([1, }])");
 }
 
 void test_nestedStartEndChaos() {
-  assertParseFails("nestedStartEndChaos", R"([{"a":[{]}])");
+  assertParseFails(__func__, R"([{"a":[{]}])");
 }
 
 void test_tooDeepArrayNesting() {
   std::string prefix(50000, '[');
   std::string suffix(50000, ']');
   std::string jsonString = prefix + suffix;
-  assertParseFails("tooDeepArrayNesting", jsonString);
+  assertParseFails(__func__, jsonString);
 }
 
-// MARK: - Test Runner
-
 int main(int argc, char* argv[]) {
-  std::string testName = argc == 1 ? "" : argv[1];
+  std::vector<std::string> args(argv + 1, argv + argc);
 
-  if (argc == 1 || testName == "emptyString") test_emptyString();
-  if (argc == 1 || testName == "unterminatedString") test_unterminatedString();
-  if (argc == 1 || testName == "unterminatedObject") test_unterminatedObject();
-  if (argc == 1 || testName == "unterminatedArray") test_unterminatedArray();
-  if (argc == 1 || testName == "missingFieldDelimiter")
-    test_missingFieldDelimiter();
-  if (argc == 1 || testName == "invalidTokenOrdering")
-    test_invalidTokenOrdering();
-  if (argc == 1 || testName == "startEndElementsMixedAtRoot")
-    test_startEndElementsMixedAtRoot();
-  if (argc == 1 || testName == "startEndElementsMixedInObject")
-    test_startEndElementsMixedInObject();
-  if (argc == 1 || testName == "closeBracketWhereObjectValueShouldBe")
-    test_closeBracketWhereObjectValueShouldBe();
-  if (argc == 1 || testName == "closeBraceWhereArrayValueShouldBe")
-    test_closeBraceWhereArrayValueShouldBe();
-  if (argc == 1 || testName == "nestedStartEndChaos")
-    test_nestedStartEndChaos();
-  if (argc == 1 || testName == "tooDeepArrayNesting")
-    test_tooDeepArrayNesting();
+  for (int i = 0; i < g_numTests; i++) {
+    std::string testName = g_testNames[i];
+    TestFunc testFunc = g_testFunctions[i];
+
+    auto testNameContains = [&testName](const auto& arg) {
+      return testName.find(arg) != std::string::npos;
+    };
+
+    if (args.empty() || std::find_if(args.begin(), args.end(),
+                                     testNameContains) != args.end()) {
+      testFunc();
+    }
+  }
 
   return 0;
 }
 
-void printPreamble(std::string_view testName) {
-  std::cout << "=== Running test: " << testName << " ===" << std::endl;
-}
-
-void printPostamble(std::string_view testName, std::string_view status) {
-  std::cout << "=== Finished test: " << testName << " (" << status
-            << ") ===" << std::endl;
-}
-
-void assertParseFails(std::string_view testName, std::string jsonString) {
-  printPreamble(testName);
-
-  ErrorType err = parseJson(std::move(jsonString), [](Event event) {});
-  if (err == ErrorType::OK) {
-    throw std::runtime_error("Expected parseJson to fail, but got OK");
-  } else {
-    std::cout << "parseJson failed with error: " << errorTypeToString(err)
-              << std::endl;
-  }
-
-  printPostamble(testName, "PASSED");
-}
+#include "MalformedJson_test.cpp.hpp"
