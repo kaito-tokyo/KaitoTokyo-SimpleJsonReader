@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.21)
 
-project(KaitoTokyoSimpleJsonReader VERSION 2026.03.21 LANGUAGES CXX)
+project(KaitoTokyoSimpleJsonReader VERSION 1.0.0 LANGUAGES CXX)
 
 option(
     KaitoTokyoSimpleJsonReader_ENABLE_TESTS
