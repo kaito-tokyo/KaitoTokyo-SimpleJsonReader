@@ -13,64 +13,80 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <stdexcept>
+#include <string>
 
 #include "SimpleJsonReader.hpp"
 
 namespace KaitoTokyo::SimpleJsonReader
 {
 
-bool isStartObject(const Event &event)
+constexpr bool operator==(C8StringView lhs, C8StringView rhs) noexcept
+{
+    return lhs.size() == rhs.size() && std::char_traits<char>::compare(lhs.data(), rhs.data(), lhs.size()) == 0;
+}
+
+constexpr bool operator!=(C8StringView lhs, C8StringView rhs) noexcept
+{
+    return !(lhs == rhs);
+}
+
+template <typename StringView> using JsonPathComponent = std::variant<StringView, std::size_t>;
+
+template <typename StringView> inline bool isStartObject(const Event<StringView> &event)
 {
     return event.type == EventType::StartObject;
 }
 
-inline bool isEndObject(const Event &event)
+template <typename StringView> inline bool isEndObject(const Event<StringView> &event)
 {
     return event.type == EventType::EndObject;
 }
 
-inline bool isStartArray(const Event &event)
+template <typename StringView> inline bool isStartArray(const Event<StringView> &event)
 {
     return event.type == EventType::StartArray;
 }
 
-inline bool isEndArray(const Event &event)
+template <typename StringView> inline bool isEndArray(const Event<StringView> &event)
 {
     return event.type == EventType::EndArray;
 }
 
-inline bool isKey(const Event &event)
+template <typename StringView> inline bool isKey(const Event<StringView> &event)
 {
     return event.type == EventType::Key;
 }
 
-inline bool isString(const Event &event)
+template <typename StringView> inline bool isString(const Event<StringView> &event)
 {
     return event.type == EventType::String;
 }
 
-inline bool isNumber(const Event &event)
+template <typename StringView> inline bool isNumber(const Event<StringView> &event)
 {
     return event.type == EventType::Number;
 }
 
-inline bool isTrue(const Event &event)
+template <typename StringView> inline bool isTrue(const Event<StringView> &event)
 {
     return event.type == EventType::True;
 }
 
-inline bool isFalse(const Event &event)
+template <typename StringView> inline bool isFalse(const Event<StringView> &event)
 {
     return event.type == EventType::False;
 }
 
-inline bool isNull(const Event &event)
+template <typename StringView> inline bool isNull(const Event<StringView> &event)
 {
     return event.type == EventType::Null;
 }
 
-inline bool matchesPathPrefix(const Event &event, const JsonPathComponent *prefix, std::int32_t prefixLength)
+template <typename StringView>
+inline bool matchesPathPrefix(const Event<StringView> &event, const JsonPathComponent<StringView> *prefix,
+                              std::int32_t prefixLength)
 {
     if (event.jsonPath == nullptr)
     {
@@ -90,7 +106,7 @@ inline bool matchesPathPrefix(const Event &event, const JsonPathComponent *prefi
         return false;
     }
 
-    JsonPath *current = event.jsonPath;
+    JsonPath<StringView> *current = event.jsonPath;
 
     while (current != nullptr && current->depth > prefixLength)
     {
@@ -109,12 +125,16 @@ inline bool matchesPathPrefix(const Event &event, const JsonPathComponent *prefi
     return current != nullptr && current->parent == nullptr;
 }
 
-inline bool matchesPathPrefix(const Event &event, std::initializer_list<JsonPathComponent> prefix)
+template <typename StringView>
+inline bool matchesPathPrefix(const Event<StringView> &event,
+                              std::initializer_list<JsonPathComponent<StringView>> prefix)
 {
     return matchesPathPrefix(event, prefix.begin(), static_cast<std::int32_t>(prefix.size()));
 }
 
-inline bool matchesExactPath(const Event &event, const JsonPathComponent *path, std::int32_t pathLength)
+template <typename StringView>
+inline bool matchesExactPath(const Event<StringView> &event, const JsonPathComponent<StringView> *path,
+                             std::int32_t pathLength)
 {
     if (event.jsonPath == nullptr)
     {
@@ -139,19 +159,21 @@ inline bool matchesExactPath(const Event &event, const JsonPathComponent *path, 
     }
 }
 
-inline bool matchesExactPath(const Event &event, std::initializer_list<JsonPathComponent> path)
+template <typename StringView>
+inline bool matchesExactPath(const Event<StringView> &event, std::initializer_list<JsonPathComponent<StringView>> path)
 {
     return matchesExactPath(event, path.begin(), static_cast<std::int32_t>(path.size()));
 }
 
-template <typename Callback> inline void forEachPathComponent(const Event &event, Callback callback)
+template <typename StringView, typename Callback>
+inline void forEachPathComponent(const Event<StringView> &event, Callback callback)
 {
     if (event.jsonPath == nullptr)
     {
         throw std::invalid_argument("Event's jsonPath cannot be null");
     }
 
-    auto visit = [&](auto self, JsonPath *jsonPath) -> void {
+    auto visit = [&](auto self, JsonPath<StringView> *jsonPath) -> void {
         if (jsonPath != nullptr && jsonPath->parent != nullptr)
         {
             self(self, jsonPath->parent);

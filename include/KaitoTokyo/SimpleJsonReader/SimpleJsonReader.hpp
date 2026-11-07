@@ -17,7 +17,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
 #include <utility>
 #include <variant>
 
@@ -126,11 +125,12 @@ struct C8StringView
     const char *str{nullptr};
     std::size_t len{0};
 
-    const char *data() const noexcept
+    constexpr const char *data() const noexcept
     {
         return str;
     }
-    std::size_t size() const noexcept
+
+    constexpr std::size_t size() const noexcept
     {
         return len;
     }
