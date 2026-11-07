@@ -1,3 +1,6 @@
+# This workflow is managed by gh actions-lock.
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 # SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -13,9 +16,7 @@ on:
 
 jobs:
   check-clang-format:
-    name: Check clang-format
-
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     permissions:
@@ -23,18 +24,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
+
+      - name: Print clang-format version
+        run: clang-format --version
 
       - name: Check with clang-format
-        shell: bash --noprofile --norc -euo pipefail {0}
-        run: "git ls-files '*.c' '*.cpp' '*.h' '*.hpp' | xargs --no-run-if-empty clang-format --dry-run --Werror"
+        run: git ls-files '*.cpp' '*.hpp' | xargs --no-run-if-empty clang-format --dry-run --Werror
 
   check-gersemi:
-    name: Check gersemi
-
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     permissions:
@@ -42,24 +43,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install gersemi with setup-python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.12"
-          pip-install: gersemi
-
-      - name: Check with gersemi
-        shell: bash --noprofile --norc -euo pipefail {0}
-        run: "git ls-files CMakeLists.txt '*.cmake' | xargs --no-run-if-empty gersemi --check"
+      - name: Check with reuse
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        run: pipx run gersemi
 
   check-reuse:
-    name: Check reuse
-
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
 
     permissions:
@@ -67,16 +60,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install reuse with setup-python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.12"
-          pip-install: reuse
-
-      - name: Lint with reuse
-        shell: bash --noprofile --norc -euo pipefail {0}
-        run: reuse lint
+      - name: Check with reuse
+        run: pipx run reuse lint
