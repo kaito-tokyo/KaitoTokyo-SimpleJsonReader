@@ -17,8 +17,6 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
 
-    name: Build and Test Library
-
     runs-on: ${{ matrix.runs-on }}
     timeout-minutes: 30
 
