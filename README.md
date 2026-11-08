@@ -22,18 +22,39 @@ Recursive Descent JSON parser for C++ with SAX-like interface. Written by Kaito 
 
 ## Example of code
 
+Pass a view such as `std::string_view` when you keep fragments after parsing. `parseJsonUtf8` takes its input by value, so passing a `std::string` parses a temporary copy and leaves the fragments dangling.
+
 ```cpp
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp>
 
+#include <cstddef>
+#include <iostream>
+#include <string>
+#include <string_view>
+
 using namespace KaitoTokyo::SimpleJsonReader;
 
-std::string_view rawName;
-parseJson(std::move(buf), [](SimpleJsonReader::Event event) {  
-    if (isString(event) && matchesPathPrefix(event, {"records", 3, "name"})) {
-        rawName = event.fragment;
-    }
-});
+int main()
+{
+    std::string json = R"({"records": [{}, {}, {}, {"name": "Alice"}]})";
 
-std::cout << "Name: " << my_unescape(rawName) << std::endl;
+    SimpleJsonReader<std::string_view> reader;
+    std::string_view rawName;
+    auto [rest, error] = reader.parseJsonUtf8(std::string_view{json}, [&rawName](Event<std::string_view> event) {
+        if (isString(event) && matchesPathPrefix(event, {"records", std::size_t{3}, "name"}))
+        {
+            rawName = event.fragment;
+        }
+    });
+
+    if (error != ErrorType::OK)
+    {
+        std::cerr << "Failed to parse JSON" << std::endl;
+        return 1;
+    }
+
+    // rawName points into json and still contains any escape sequences such as \n.
+    std::cout << "Name: " << rawName << std::endl;
+}
 ```

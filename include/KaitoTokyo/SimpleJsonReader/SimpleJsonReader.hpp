@@ -565,19 +565,20 @@ template <typename string_view = C8StringView, int SWAR = 64> class SimpleJsonRe
 
     /**
      * @brief Parses a JSON string and emits events to the provided handler.
-     * @param jsonSv The JSON string to parse. Move semantics are supported for
-     * efficiency.
+     * @param jsonString The JSON input to parse. It is taken by value, so pass a
+     * view such as std::string_view to keep fragments valid after parsing.
      * @param handler A synchronous callback function to receive parsing events.
      * @return OK if parsing succeeded, otherwise an error code.
      * @code
-     * parseJson(std::move(view), [](auto event) {
+     * SimpleJsonReader<std::string_view> reader;
+     * reader.parseJsonUtf8(std::string_view{json}, [](auto event) {
      *   // Write your code to handle JSON content here.
      *   // event          - The context of the parsing event. Only valid during
-     * this callback execution.
-     *   // event.type     - The type of parsing event like StartArrayo or String.
-     *   // event.frament  - The raw JSON fragment corresponding to the event.
-     *   // envet.jsonPath - The JSON path of the current event. Matcher helpers
-     * are available in the other header file.
+     *   //                  this callback execution.
+     *   // event.type     - The type of parsing event like StartArray or String.
+     *   // event.fragment - The raw JSON fragment corresponding to the event.
+     *   // event.jsonPath - The JSON path of the current event. Matcher helpers
+     *   //                  are available in the other header file.
      * });
      * @endcode
      */
