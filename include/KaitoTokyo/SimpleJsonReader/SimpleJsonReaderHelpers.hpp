@@ -85,12 +85,16 @@ template <typename StringView> inline bool isNull(const Event<StringView> &event
 }
 
 template <typename StringView>
-inline bool matchesPathPrefix(const Event<StringView> &event, const JsonPathComponent<StringView> *prefix,
+inline bool matchesPathPrefix(const Event<StringView> &event, const decltype(JsonPath<StringView>::component) *prefix,
                               std::int32_t prefixLength)
 {
     if (event.jsonPath == nullptr)
     {
         throw std::invalid_argument("Event's jsonPath cannot be null");
+    }
+    else if (prefixLength < 0)
+    {
+        throw std::invalid_argument("Prefix length cannot be negative");
     }
     else if (prefixLength == 0)
     {
@@ -127,13 +131,13 @@ inline bool matchesPathPrefix(const Event<StringView> &event, const JsonPathComp
 
 template <typename StringView>
 inline bool matchesPathPrefix(const Event<StringView> &event,
-                              std::initializer_list<JsonPathComponent<StringView>> prefix)
+                              std::initializer_list<decltype(JsonPath<StringView>::component)> prefix)
 {
     return matchesPathPrefix(event, prefix.begin(), static_cast<std::int32_t>(prefix.size()));
 }
 
 template <typename StringView>
-inline bool matchesExactPath(const Event<StringView> &event, const JsonPathComponent<StringView> *path,
+inline bool matchesExactPath(const Event<StringView> &event, const decltype(JsonPath<StringView>::component) *path,
                              std::int32_t pathLength)
 {
     if (event.jsonPath == nullptr)
@@ -160,7 +164,8 @@ inline bool matchesExactPath(const Event<StringView> &event, const JsonPathCompo
 }
 
 template <typename StringView>
-inline bool matchesExactPath(const Event<StringView> &event, std::initializer_list<JsonPathComponent<StringView>> path)
+inline bool matchesExactPath(const Event<StringView> &event,
+                             std::initializer_list<decltype(JsonPath<StringView>::component)> path)
 {
     return matchesExactPath(event, path.begin(), static_cast<std::int32_t>(path.size()));
 }

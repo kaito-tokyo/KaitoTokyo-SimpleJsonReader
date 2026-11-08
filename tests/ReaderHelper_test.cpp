@@ -43,8 +43,6 @@ Component_t idx(std::size_t i)
     return Component_t{i};
 }
 
-const Component_t *const noPath = nullptr;
-
 void expect(bool condition, const char *message)
 {
     if (!condition)
@@ -143,7 +141,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath()
     JsonPath_t root{nullptr, {}, 0};
     Event_t event{sv(""), &root, EventType::String};
 
-    expect(matchesPathPrefix(event, noPath, 0), "Expected an empty prefix to match an empty path");
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match an empty path");
 
     printPostamble(__func__);
 }
@@ -156,7 +154,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath()
     JsonPath_t child{&root, sv("child"), 1};
     Event_t event{sv(""), &child, EventType::String};
 
-    expect(matchesPathPrefix(event, noPath, 0), "Expected an empty prefix to match a one-component path");
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match a one-component path");
 
     printPostamble(__func__);
 }
@@ -170,7 +168,7 @@ void test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath()
     JsonPath_t child2{&child1, sv("child2"), 2};
     Event_t event{sv(""), &child2, EventType::String};
 
-    expect(matchesPathPrefix(event, noPath, 0), "Expected an empty prefix to match a two-component path");
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match a two-component path");
 
     printPostamble(__func__);
 }
@@ -330,6 +328,8 @@ void test_matchesPathPrefix_initializerList()
 
     expect(matchesPathPrefix(event, {key("child1"), idx(0)}),
            "Expected the initializer list overload of matchesPathPrefix to work");
+    expect(matchesPathPrefix(event, {sv("child1"), std::size_t{0}}),
+           "Expected the initializer list overload of matchesPathPrefix to accept convertible values");
 
     printPostamble(__func__);
 }
@@ -342,6 +342,7 @@ void test_matchesPathPrefix_throwsOnInvalidArguments()
     JsonPath_t child{&root, sv("child"), 1};
     Event_t event{sv(""), &child, EventType::String};
     Event_t nullPathEvent{sv(""), nullptr, EventType::String};
+    std::array<Component_t, 1> prefix{key("child")};
 
     auto throwsInvalidArgument = [](auto func) {
         try
@@ -355,11 +356,11 @@ void test_matchesPathPrefix_throwsOnInvalidArguments()
         return false;
     };
 
-    expect(throwsInvalidArgument([&] { matchesPathPrefix(nullPathEvent, noPath, 0); }),
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(nullPathEvent, nullptr, 0); }),
            "Expected a null jsonPath to throw");
-    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, noPath, 1); }),
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, nullptr, 1); }),
            "Expected a null prefix with a positive length to throw");
-    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, noPath, -1); }),
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, prefix.data(), -1); }),
            "Expected a negative prefix length to throw");
 
     printPostamble(__func__);
@@ -427,8 +428,8 @@ void test_matchesExactPath_emptyPathMatchesOnlyRoot()
     Event_t rootEvent{sv(""), &root, EventType::String};
     Event_t childEvent{sv(""), &child, EventType::String};
 
-    expect(matchesExactPath(rootEvent, noPath, 0), "Expected an empty path to match the root");
-    expect(!matchesExactPath(childEvent, noPath, 0), "Expected an empty path to not match a child");
+    expect(matchesExactPath(rootEvent, nullptr, 0), "Expected an empty path to match the root");
+    expect(!matchesExactPath(childEvent, nullptr, 0), "Expected an empty path to not match a child");
 
     printPostamble(__func__);
 }
@@ -444,6 +445,8 @@ void test_matchesExactPath_initializerList()
 
     expect(matchesExactPath(event, {key("child1"), idx(0)}),
            "Expected the initializer list overload of matchesExactPath to work");
+    expect(matchesExactPath(event, {sv("child1"), std::size_t{0}}),
+           "Expected the initializer list overload of matchesExactPath to accept convertible values");
 
     printPostamble(__func__);
 }
