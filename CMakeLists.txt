@@ -29,7 +29,9 @@ install(
 )
 
 install(
-    FILES KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp
+    FILES
+        include/KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp
+        include/KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp
     DESTINATION include/KaitoTokyo/SimpleJsonReader
 )
 

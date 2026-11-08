@@ -4,566 +4,502 @@
 
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReader.hpp>
 #include <KaitoTokyo/SimpleJsonReader/SimpleJsonReaderHelpers.hpp>
+#include <algorithm>
 #include <array>
-#include <iostream>
+#include <cstring>
+#include <stdexcept>
 #include <vector>
 
 #include "test_helper.hpp"
 
-using namespace std::string_view_literals;
+#ifdef USE_STD_STRING_VIEW
+using string_view = std::string_view;
+#else
+using string_view = KaitoTokyo::SimpleJsonReader::C8StringView;
+#endif
+
 using namespace KaitoTokyo::SimpleJsonReader;
 using KaitoTokyo::SimpleJsonReader::EventType;
 
-void printPreamble(std::string_view testName);
-void printPostamble(std::string_view testName, std::string_view status);
+using JsonPath_t = JsonPath<string_view>;
+using Event_t = Event<string_view>;
+using Component_t = JsonPathComponent<string_view>;
+
+namespace
+{
+
+string_view sv(const char *str)
+{
+    return string_view{str, std::strlen(str)};
+}
+
+Component_t key(const char *str)
+{
+    return Component_t{sv(str)};
+}
+
+Component_t idx(std::size_t i)
+{
+    return Component_t{i};
+}
+
+void expect(bool condition, const char *message)
+{
+    if (!condition)
+    {
+        throw std::runtime_error(message);
+    }
+}
+
+template <typename Predicate> void testPredicate(Predicate predicate, EventType matchingType)
+{
+    Event_t event{sv(""), nullptr, matchingType};
+    expect(predicate(event), "Expected the predicate to return true");
+
+    Event_t undefinedEvent{sv(""), nullptr, EventType::Undefined};
+    expect(!predicate(undefinedEvent), "Expected the predicate to return false for undefinedEvent");
+}
+
+} // namespace
 
 // MARK: - Test Cases
 
-Event undefinedEvent{"", nullptr, EventType::Undefined};
-
-void test_isStartObject() {
-  printPreamble("isStartObject");
-
-  Event event{"", nullptr, EventType::StartObject};
-  if (!isStartObject(event)) {
-    throw std::runtime_error("Expected isStartObject to return true");
-  }
-
-  if (isStartObject(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isStartObject to return false for undefinedEvent");
-  }
-
-  printPostamble("isStartObject", "PASSED");
+void test_isStartObject()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isStartObject(e); }, EventType::StartObject);
+    printPostamble(__func__);
 }
 
-void test_isEndObject() {
-  printPreamble("isEndObject");
-
-  Event event{"", nullptr, EventType::EndObject};
-  if (!isEndObject(event)) {
-    throw std::runtime_error("Expected isEndObject to return true");
-  }
-
-  if (isEndObject(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isEndObject to return false for undefinedEvent");
-  }
-
-  printPostamble("isEndObject", "PASSED");
+void test_isEndObject()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isEndObject(e); }, EventType::EndObject);
+    printPostamble(__func__);
 }
 
-void test_isStartArray() {
-  printPreamble("isStartArray");
-
-  Event event{"", nullptr, EventType::StartArray};
-  if (!isStartArray(event)) {
-    throw std::runtime_error("Expected isStartArray to return true");
-  }
-
-  if (isStartArray(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isStartArray to return false for undefinedEvent");
-  }
-
-  printPostamble("isStartArray", "PASSED");
+void test_isStartArray()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isStartArray(e); }, EventType::StartArray);
+    printPostamble(__func__);
 }
 
-void test_isEndArray() {
-  printPreamble("isEndArray");
-
-  Event event{"", nullptr, EventType::EndArray};
-  if (!isEndArray(event)) {
-    throw std::runtime_error("Expected isEndArray to return true");
-  }
-
-  if (isEndArray(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isEndArray to return false for undefinedEvent");
-  }
-
-  printPostamble("isEndArray", "PASSED");
+void test_isEndArray()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isEndArray(e); }, EventType::EndArray);
+    printPostamble(__func__);
 }
 
-void test_isKey() {
-  printPreamble("isKey");
-
-  Event event{"", nullptr, EventType::Key};
-  if (!isKey(event)) {
-    throw std::runtime_error("Expected isKey to return true");
-  }
-
-  if (isKey(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isKey to return false for undefinedEvent");
-  }
-
-  printPostamble("isKey", "PASSED");
+void test_isKey()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isKey(e); }, EventType::Key);
+    printPostamble(__func__);
 }
 
-void test_isString() {
-  printPreamble("isString");
-
-  Event event{"", nullptr, EventType::String};
-  if (!isString(event)) {
-    throw std::runtime_error("Expected isString to return true");
-  }
-
-  if (isString(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isString to return false for undefinedEvent");
-  }
-
-  printPostamble("isString", "PASSED");
+void test_isString()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isString(e); }, EventType::String);
+    printPostamble(__func__);
 }
 
-void test_isNumber() {
-  printPreamble("isNumber");
-
-  Event event{"", nullptr, EventType::Number};
-  if (!isNumber(event)) {
-    throw std::runtime_error("Expected isNumber to return true");
-  }
-
-  if (isNumber(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isNumber to return false for undefinedEvent");
-  }
-
-  printPostamble("isNumber", "PASSED");
+void test_isNumber()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isNumber(e); }, EventType::Number);
+    printPostamble(__func__);
 }
 
-void test_isTrue() {
-  printPreamble("isTrue");
-
-  Event event{"", nullptr, EventType::True};
-  if (!isTrue(event)) {
-    throw std::runtime_error("Expected isTrue to return true");
-  }
-
-  if (isTrue(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isTrue to return false for undefinedEvent");
-  }
-
-  printPostamble("isTrue", "PASSED");
+void test_isTrue()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isTrue(e); }, EventType::True);
+    printPostamble(__func__);
 }
 
-void test_isFalse() {
-  printPreamble("isFalse");
-
-  Event event{"", nullptr, EventType::False};
-  if (!isFalse(event)) {
-    throw std::runtime_error("Expected isFalse to return true");
-  }
-
-  if (isFalse(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isFalse to return false for undefinedEvent");
-  }
-
-  printPostamble("isFalse", "PASSED");
+void test_isFalse()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isFalse(e); }, EventType::False);
+    printPostamble(__func__);
 }
 
-void test_isNull() {
-  printPreamble("isNull");
-
-  Event event{"", nullptr, EventType::Null};
-  if (!isNull(event)) {
-    throw std::runtime_error("Expected isNull to return true");
-  }
-
-  if (isNull(undefinedEvent)) {
-    throw std::runtime_error(
-        "Expected isNull to return false for undefinedEvent");
-  }
-
-  printPostamble("isNull", "PASSED");
+void test_isNull()
+{
+    printPreamble(__func__);
+    testPredicate([](const Event_t &e) { return isNull(e); }, EventType::Null);
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath() {
-  printPreamble("matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath");
+void test_matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  Event event{"", &root, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    Event_t event{sv(""), &root, EventType::String};
 
-  if (!matchesPathPrefix(event, nullptr, 0)) {
-    throw std::runtime_error("Expected an empty prefix to match an empty path");
-  }
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match an empty path");
 
-  printPostamble("matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath() {
-  printPreamble("matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath");
+void test_matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, "child"sv, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  if (!matchesPathPrefix(event, nullptr, 0)) {
-    throw std::runtime_error(
-        "Expected an empty prefix to match a one-component path");
-  }
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match a one-component path");
 
-  printPostamble("matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath",
-                 "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath() {
-  printPreamble("matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath");
+void test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, "child2"sv, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, sv("child2"), 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  if (!matchesPathPrefix(event, nullptr, 0)) {
-    throw std::runtime_error(
-        "Expected an empty prefix to match a two-component path");
-  }
+    expect(matchesPathPrefix(event, nullptr, 0), "Expected an empty prefix to match a two-component path");
 
-  printPostamble("matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath",
-                 "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_stringPrefixCanMatchStringPath() {
-  printPreamble("matchesPathPrefix_stringPrefixCanMatchStringPath");
+void test_matchesPathPrefix_stringPrefixCanMatchStringPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, "child"sv, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
-  if (!matchesPathPrefix(event, prefix.data(), 1)) {
-    throw std::runtime_error("Expected a string prefix to match a string path");
-  }
+    std::array<Component_t, 1> prefix{key("child")};
+    expect(matchesPathPrefix(event, prefix.data(), 1), "Expected a string prefix to match a string path");
 
-  printPostamble("matchesPathPrefix_stringPrefixCanMatchStringPath", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_indexPrefixCanMatchIndexPath() {
-  printPreamble("matchesPathPrefix_indexPrefixCanMatchIndexPath");
+void test_matchesPathPrefix_stringPrefixNeverMatchDifferentString()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, std::size_t{0}, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 1> prefix{JsonPathComponent{std::size_t{0}}};
-  if (!matchesPathPrefix(event, prefix.data(), 1)) {
-    throw std::runtime_error("Expected an index prefix to match an index path");
-  }
+    std::array<Component_t, 1> prefix{key("chile")};
+    expect(!matchesPathPrefix(event, prefix.data(), 1),
+           "Expected a string prefix to not match a different string path");
 
-  printPostamble("matchesPathPrefix_indexPrefixCanMatchIndexPath", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_indexPrefixNeverMatchStringPath() {
-  printPreamble("matchesPathPrefix_indexPrefixNeverMatchStringPath");
+void test_matchesPathPrefix_indexPrefixCanMatchIndexPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, "child"sv, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, std::size_t{0}, 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 1> prefix{JsonPathComponent{std::size_t{0}}};
-  if (matchesPathPrefix(event, prefix.data(), 1)) {
-    throw std::runtime_error(
-        "Expected an index prefix to not match a string path");
-  }
+    std::array<Component_t, 1> prefix{idx(0)};
+    expect(matchesPathPrefix(event, prefix.data(), 1), "Expected an index prefix to match an index path");
 
-  printPostamble("matchesPathPrefix_indexPrefixNeverMatchStringPath", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_stringPrefixNeverMatchIndexPath() {
-  printPreamble("matchesPathPrefix_stringPrefixNeverMatchIndexPath");
+void test_matchesPathPrefix_indexPrefixNeverMatchStringPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, std::size_t{0}, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
-  if (matchesPathPrefix(event, prefix.data(), 1)) {
-    throw std::runtime_error(
-        "Expected a string prefix to not match an index path");
-  }
+    std::array<Component_t, 1> prefix{idx(0)};
+    expect(!matchesPathPrefix(event, prefix.data(), 1), "Expected an index prefix to not match a string path");
 
-  printPostamble("matchesPathPrefix_stringPrefixNeverMatchIndexPath", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath() {
-  printPreamble(
-      "matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath");
+void test_matchesPathPrefix_stringPrefixNeverMatchIndexPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{0}, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, std::size_t{0}, 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child1"sv},
-                                          JsonPathComponent{std::size_t{0}}};
-  if (!matchesPathPrefix(event, prefix.data(), 2)) {
-    throw std::runtime_error(
-        "Expected a string/index prefix to match a string/index path");
-  }
+    std::array<Component_t, 1> prefix{key("child")};
+    expect(!matchesPathPrefix(event, prefix.data(), 1), "Expected a string prefix to not match an index path");
 
-  printPostamble(
-      "matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath",
-      "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath() {
-  printPreamble(
-      "matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath");
+void test_matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, std::size_t{0}, 1};
-  JsonPath child2{&child1, "child2"sv, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  std::array<JsonPathComponent, 2> prefix{JsonPathComponent{std::size_t{0}},
-                                          JsonPathComponent{"child2"sv}};
-  if (!matchesPathPrefix(event, prefix.data(), 2)) {
-    throw std::runtime_error(
-        "Expected an index/string prefix to match an index/string path");
-  }
+    std::array<Component_t, 2> prefix{key("child1"), idx(0)};
+    expect(matchesPathPrefix(event, prefix.data(), 2), "Expected a string/index prefix to match a string/index path");
 
-  printPostamble(
-      "matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath",
-      "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath() {
-  printPreamble("matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath");
+void test_matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  Event event{"", &root, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, std::size_t{0}, 1};
+    JsonPath_t child2{&child1, sv("child2"), 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  std::array<JsonPathComponent, 1> prefix{JsonPathComponent{"child"sv}};
-  if (matchesPathPrefix(event, prefix.data(), 1)) {
-    throw std::runtime_error(
-        "Expected a one-component prefix to not match an empty path");
-  }
+    std::array<Component_t, 2> prefix{idx(0), key("child2")};
+    expect(matchesPathPrefix(event, prefix.data(), 2), "Expected an index/string prefix to match an index/string path");
 
-  printPostamble("matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath",
-                 "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath() {
-  printPreamble(
-      "matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath");
+void test_matchesPathPrefix_shorterPrefixMatchesLongerPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, "child"sv, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child"sv},
-                                          JsonPathComponent{"other"sv}};
-  if (matchesPathPrefix(event, prefix.data(), 2)) {
-    throw std::runtime_error(
-        "Expected a two-component prefix to not match a one-component path");
-  }
+    std::array<Component_t, 1> prefix{key("child1")};
+    expect(matchesPathPrefix(event, prefix.data(), 1), "Expected a one-component prefix to match a two-component path");
 
-  printPostamble(
-      "matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath",
-      "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesPathPrefix_initializerList() {
-  printPreamble("matchesPathPrefix_initializerList");
+void test_matchesPathPrefix_oneComponentPrefixNeverMatchEmptyPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{0}, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    Event_t event{sv(""), &root, EventType::String};
 
-  if (!matchesPathPrefix(event, {"child1"sv, std::size_t{0}})) {
-    throw std::runtime_error(
-        "Expected the initializer list overload of matchesPathPrefix to work");
-  }
+    std::array<Component_t, 1> prefix{key("child")};
+    expect(!matchesPathPrefix(event, prefix.data(), 1), "Expected a one-component prefix to not match an empty path");
 
-  printPostamble("matchesPathPrefix_initializerList", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesExactPath_neverMatchIfLengthMismatch() {
-  printPreamble("matchesExactPath_neverMatchIfLengthMismatch");
+void test_matchesPathPrefix_twoComponentsPrefixNeverMatchOneComponentPath()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child{&root, "child"sv, 1};
-  Event event{"", &child, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  std::array<JsonPathComponent, 2> prefix{JsonPathComponent{"child"sv},
-                                          JsonPathComponent{"grandchild"sv}};
-  if (matchesExactPath(event, prefix.data(), 2)) {
-    throw std::runtime_error(
-        "Expected matchesExactPath to return false when the length mismatches");
-  }
+    std::array<Component_t, 2> prefix{key("child"), key("other")};
+    expect(!matchesPathPrefix(event, prefix.data(), 2),
+           "Expected a two-component prefix to not match a one-component path");
 
-  printPostamble("matchesExactPath_neverMatchIfLengthMismatch", "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesExactPath_matchesWhenLengthAndComponentsMatch() {
-  printPreamble("matchesExactPath_matchesWhenLengthAndComponentsMatch");
+void test_matchesPathPrefix_initializerList()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{0}, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  std::array<JsonPathComponent, 2> path{JsonPathComponent{"child1"sv},
-                                        JsonPathComponent{std::size_t{0}}};
-  if (!matchesExactPath(event, path.data(), 2)) {
-    throw std::runtime_error(
-        "Expected matchesExactPath to return true when length and components "
-        "match");
-  }
+    expect(matchesPathPrefix(event, {key("child1"), idx(0)}),
+           "Expected the initializer list overload of matchesPathPrefix to work");
+    expect(matchesPathPrefix(event, {sv("child1"), std::size_t{0}}),
+           "Expected the initializer list overload of matchesPathPrefix to accept convertible values");
 
-  printPostamble("matchesExactPath_matchesWhenLengthAndComponentsMatch",
-                 "PASSED");
+    printPostamble(__func__);
 }
 
-void test_matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch() {
-  printPreamble(
-      "matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch");
+void test_matchesPathPrefix_throwsOnInvalidArguments()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{0}, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
+    Event_t nullPathEvent{sv(""), nullptr, EventType::String};
+    std::array<Component_t, 1> prefix{key("child")};
 
-  std::array<JsonPathComponent, 2> path{JsonPathComponent{"child1"sv},
-                                        JsonPathComponent{std::size_t{1}}};
-  if (matchesExactPath(event, path.data(), 2)) {
-    throw std::runtime_error(
-        "Expected matchesExactPath to return false when the components "
-        "mismatch");
-  }
+    auto throwsInvalidArgument = [](auto func) {
+        try
+        {
+            func();
+        }
+        catch (const std::invalid_argument &)
+        {
+            return true;
+        }
+        return false;
+    };
 
-  printPostamble(
-      "matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch",
-      "PASSED");
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(nullPathEvent, nullptr, 0); }),
+           "Expected a null jsonPath to throw");
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, nullptr, 1); }),
+           "Expected a null prefix with a positive length to throw");
+    expect(throwsInvalidArgument([&] { matchesPathPrefix(event, prefix.data(), -1); }),
+           "Expected a negative prefix length to throw");
+
+    printPostamble(__func__);
 }
 
-void test_matchesExactPath_initializerList() {
-  printPreamble("matchesExactPath_initializerList");
+void test_matchesExactPath_neverMatchIfLengthMismatch()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{0}, 2};
-  Event event{"", &child2, EventType::String};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t event{sv(""), &child, EventType::String};
 
-  if (!matchesExactPath(event, {"child1"sv, std::size_t{0}})) {
-    throw std::runtime_error(
-        "Expected the initializer list overload of matchesExactPath to work");
-  }
+    std::array<Component_t, 2> path{key("child"), key("grandchild")};
+    expect(!matchesExactPath(event, path.data(), 2),
+           "Expected matchesExactPath to return false when the length is longer");
 
-  printPostamble("matchesExactPath_initializerList", "PASSED");
+    JsonPath_t grandchild{&child, sv("grandchild"), 2};
+    Event_t deeperEvent{sv(""), &grandchild, EventType::String};
+    expect(!matchesExactPath(deeperEvent, path.data(), 1),
+           "Expected matchesExactPath to return false when the length is shorter");
+
+    printPostamble(__func__);
 }
 
-void test_forEachPathComponent() {
-  printPreamble("forEachPathComponent");
+void test_matchesExactPath_matchesWhenLengthAndComponentsMatch()
+{
+    printPreamble(__func__);
 
-  JsonPath root{nullptr, ""sv, 0};
-  JsonPath child1{&root, "child1"sv, 1};
-  JsonPath child2{&child1, std::size_t{2}, 2};
-  JsonPath child3{&child2, "child3"sv, 3};
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  Event event{"", &child3, EventType::String};
+    std::array<Component_t, 2> path{key("child1"), idx(0)};
+    expect(matchesExactPath(event, path.data(), 2),
+           "Expected matchesExactPath to return true when length and components "
+           "match");
 
-  std::vector<JsonPathComponent> components;
-  forEachPathComponent(event,
-                       [&components](const JsonPathComponent& component) {
-                         components.push_back(component);
-                       });
+    printPostamble(__func__);
+}
 
-  std::vector<JsonPathComponent> expected{JsonPathComponent{"child1"sv},
-                                          JsonPathComponent{std::size_t{2}},
-                                          JsonPathComponent{"child3"sv}};
+void test_matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch()
+{
+    printPreamble(__func__);
 
-  if (components != expected) {
-    throw std::runtime_error(
-        "Expected forEachPathComponent to visit path components from root to "
-        "leaf");
-  }
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
 
-  printPostamble("forEachPathComponent", "PASSED");
+    std::array<Component_t, 2> path{key("child1"), idx(1)};
+    expect(!matchesExactPath(event, path.data(), 2), "Expected matchesExactPath to return false when the components "
+                                                     "mismatch");
+
+    printPostamble(__func__);
+}
+
+void test_matchesExactPath_emptyPathMatchesOnlyRoot()
+{
+    printPreamble(__func__);
+
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child{&root, sv("child"), 1};
+    Event_t rootEvent{sv(""), &root, EventType::String};
+    Event_t childEvent{sv(""), &child, EventType::String};
+
+    expect(matchesExactPath(rootEvent, nullptr, 0), "Expected an empty path to match the root");
+    expect(!matchesExactPath(childEvent, nullptr, 0), "Expected an empty path to not match a child");
+
+    printPostamble(__func__);
+}
+
+void test_matchesExactPath_initializerList()
+{
+    printPreamble(__func__);
+
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{0}, 2};
+    Event_t event{sv(""), &child2, EventType::String};
+
+    expect(matchesExactPath(event, {key("child1"), idx(0)}),
+           "Expected the initializer list overload of matchesExactPath to work");
+    expect(matchesExactPath(event, {sv("child1"), std::size_t{0}}),
+           "Expected the initializer list overload of matchesExactPath to accept convertible values");
+
+    printPostamble(__func__);
+}
+
+void test_forEachPathComponent()
+{
+    printPreamble(__func__);
+
+    JsonPath_t root{nullptr, {}, 0};
+    JsonPath_t child1{&root, sv("child1"), 1};
+    JsonPath_t child2{&child1, std::size_t{2}, 2};
+    JsonPath_t child3{&child2, sv("child3"), 3};
+    Event_t event{sv(""), &child3, EventType::String};
+
+    std::vector<std::string> components;
+    forEachPathComponent(event, [&components](const Component_t &component) {
+        if (const auto *k = std::get_if<string_view>(&component))
+        {
+            components.emplace_back(k->data(), k->size());
+        }
+        else
+        {
+            components.push_back("#" + std::to_string(std::get<std::size_t>(component)));
+        }
+    });
+
+    std::vector<std::string> expected{"child1", "#2", "child3"};
+    expect(components == expected, "Expected forEachPathComponent to visit path components from root to "
+                                   "leaf");
+
+    printPostamble(__func__);
 }
 
 // MARK: - Test Runner
 
-int main(int argc, char* argv[]) {
-  std::string testName = argc == 1 ? "" : argv[1];
+int main(int argc, char *argv[])
+{
+    std::vector<std::string> args(argv + 1, argv + argc);
 
-  if (testName.empty() || testName == "isStartObject") test_isStartObject();
-  if (testName.empty() || testName == "isEndObject") test_isEndObject();
-  if (testName.empty() || testName == "isStartArray") test_isStartArray();
-  if (testName.empty() || testName == "isEndArray") test_isEndArray();
-  if (testName.empty() || testName == "isKey") test_isKey();
-  if (testName.empty() || testName == "isString") test_isString();
-  if (testName.empty() || testName == "isNumber") test_isNumber();
-  if (testName.empty() || testName == "isTrue") test_isTrue();
-  if (testName.empty() || testName == "isFalse") test_isFalse();
-  if (testName.empty() || testName == "isNull") test_isNull();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath")
-    test_matchesPathPrefix_emptyPrefixAlwaysMatchEmptyPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath")
-    test_matchesPathPrefix_emptyPrefixAlwaysMatchOneComponentPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath")
-    test_matchesPathPrefix_emptyPrefixAlwaysMatchTwoComponentsPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_stringPrefixCanMatchStringPath")
-    test_matchesPathPrefix_stringPrefixCanMatchStringPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_indexPrefixCanMatchIndexPath")
-    test_matchesPathPrefix_indexPrefixCanMatchIndexPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_indexPrefixNeverMatchStringPath")
-    test_matchesPathPrefix_indexPrefixNeverMatchStringPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_stringPrefixNeverMatchIndexPath")
-    test_matchesPathPrefix_stringPrefixNeverMatchIndexPath();
-  if (testName.empty() ||
-      testName ==
-          "matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath")
-    test_matchesPathPrefix_stringAndIndexPrefixCanMatchStringAndIndexPath();
-  if (testName.empty() ||
-      testName ==
-          "matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath")
-    test_matchesPathPrefix_indexAndStringPrefixCanMatchIndexAndStringPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath")
-    test_matchesPathPrefix_OneComponentPrefixNeverMatchEmptyPath();
-  if (testName.empty() ||
-      testName ==
-          "matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath")
-    test_matchesPathPrefix_TwoComponentsPrefixNeverMatchOneComponentsPath();
-  if (testName.empty() ||
-      testName == "matchesPathPrefix_initializerListOverload")
-    test_matchesPathPrefix_initializerList();
-  if (testName.empty() ||
-      testName == "matchesExactPath_neverMatchIfLengthMismatch")
-    test_matchesExactPath_neverMatchIfLengthMismatch();
-  if (testName.empty() ||
-      testName == "matchesExactPath_matchesWhenLengthAndComponentsMatch")
-    test_matchesExactPath_matchesWhenLengthAndComponentsMatch();
-  if (testName.empty() ||
-      testName ==
-          "matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch")
-    test_matchesExactPath_notMatchWhenLengthMatchesButComponentsNotMatch();
-  if (testName.empty() || testName == "matchesExactPath_initializerList")
-    test_matchesExactPath_initializerList();
-  if (testName.empty() || testName == "forEachPathComponent")
-    test_forEachPathComponent();
+    for (int i = 0; i < g_numTests; i++)
+    {
+        std::string testName = g_testNames[i];
+        TestFunc testFunc = g_testFunctions[i];
 
-  return 0;
+        auto testNameContains = [&testName](const auto &arg) { return testName.find(arg) != std::string::npos; };
+
+        if (args.empty() || std::find_if(args.begin(), args.end(), testNameContains) != args.end())
+        {
+            testFunc();
+        }
+    }
+
+    return 0;
 }
 
-void printPreamble(std::string_view testName) {
-  std::cout << "=== Running test: " << testName << " ===" << std::endl;
-}
-
-void printPostamble(std::string_view testName, std::string_view status) {
-  std::cout << "=== Finished test: " << testName << " (" << status
-            << ") ===" << std::endl;
-}
+#include "ReaderHelper_test.cpp.hpp"
